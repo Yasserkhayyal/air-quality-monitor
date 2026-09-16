@@ -179,3 +179,18 @@ The initial product should avoid unnecessary features and complexity.
 
 Location access should be requested only when needed and should not
 require an account for the core experience.
+
+---
+
+## 8. Data Source
+
+The initial version uses the Open-Meteo Air Quality API as its external
+air-quality data source.
+
+The application communicates with the API over HTTP.
+
+The data source provides current and hourly air-quality information,
+including AQI and pollutant measurements.
+
+The exact API fields used by the application will be documented in the
+architecture and data-layer design.
