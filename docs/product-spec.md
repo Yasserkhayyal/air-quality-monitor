@@ -44,8 +44,12 @@ air-quality information for that location.
 
 Location permission must only be requested when necessary.
 
+Location permission is optional for using the application.
+
 If the user denies location permission, the application must remain
-usable through city/location search.
+fully usable through location/city search.
+
+The user may explicitly choose to use their current location later.
 
 ---
 
@@ -64,8 +68,7 @@ The presentation should prioritize understandable information.
 
 ### 4.3 Pollutant Details
 
-The application should provide information for supported major
-pollutants, such as:
+The application displays the following supported pollutants:
 
 - PM2.5
 - PM10
@@ -73,17 +76,24 @@ pollutants, such as:
 - O3
 - CO
 
-The exact supported pollutants depend on the selected air-quality
-data source.
+If a supported pollutant is unavailable in a particular API response,
+the UI should handle the missing value gracefully rather than displaying
+an incorrect value.
 
 ---
 
 ### 4.4 Location Search
 
-Users can search for another location or city and view its current
-air quality.
+Users can search for another location or city.
 
-Search results should allow the user to select a location.
+The application uses a geocoding service to translate a user-entered
+place name into a geographic location.
+
+Search results should provide enough information for the user to
+distinguish between locations with similar names.
+
+After selecting a location, the application retrieves its air-quality
+data using the selected location's coordinates.
 
 ---
 
@@ -103,10 +113,21 @@ Favorites do not require authentication and are stored locally.
 
 ### 4.6 Historical Data
 
-The application should provide historical air-quality information
-and trends when supported by the selected data source.
+The application displays the last 24 hours of hourly air-quality
+measurements when the data source provides the required data.
 
-The exact historical range and granularity will depend on the API.
+The historical view should support trend visualization over time.
+
+Historical measurements may include:
+
+- AQI
+- PM2.5
+- PM10
+- NO2
+- O3
+- CO
+
+The exact fields displayed depend on data availability.
 
 ---
 
@@ -120,6 +141,17 @@ When network connectivity is unavailable:
 - The application must clearly indicate that the displayed data is
   cached or stale.
 - If no cached data exists, an understandable offline state must be shown.
+- The application caches recently retrieved air-quality data.
+
+A cached measurement is considered fresh for up to 30 minutes after
+its retrieval time.
+
+When network connectivity is unavailable:
+
+- Cached data should be displayed when available.
+- Data older than 30 minutes must be clearly marked as stale.
+- The UI must indicate that the displayed data is cached/stale.
+- If no cached data exists, an understandable offline state is shown.
 
 ---
 
@@ -184,13 +216,18 @@ require an account for the core experience.
 
 ## 8. Data Source
 
-The initial version uses the Open-Meteo Air Quality API as its external
+### 8.1 Air Quality Data
+
+The initial version uses the Open-Meteo Air Quality API as the external
 air-quality data source.
 
-The application communicates with the API over HTTP.
+The application retrieves current and hourly air-quality information
+using geographic coordinates.
 
-The data source provides current and hourly air-quality information,
-including AQI and pollutant measurements.
+### 8.2 Location Search
 
-The exact API fields used by the application will be documented in the
-architecture and data-layer design.
+The application uses a geocoding service to convert user-entered
+place names into geographic coordinates.
+
+The geocoding implementation is an external data-source concern and
+must not be exposed directly to the presentation layer.

@@ -55,7 +55,38 @@ Responsibilities:
 
 ---
 
-## 3. Data Flow
+## 3. Domain Concepts
+
+The primary domain concepts are:
+
+### AirQuality
+
+Represents the application's understanding of air quality at a
+specific location and time.
+
+It may contain:
+
+- AQI
+- air-quality category
+- pollutant measurements
+- timestamp
+- location
+
+### Location
+
+Represents a geographic location selected or detected by the user.
+
+It contains the information required to identify and query that
+location, including coordinates and a human-readable name.
+
+### FavoriteLocation
+
+Represents a location saved by the user for quick future access.
+
+The domain layer must not depend on API DTOs, Room entities, or Android
+framework classes.
+
+## 4. Data Flow
 
 The expected data flow is:
 
@@ -76,54 +107,107 @@ ViewModel
 
 ---
 
-## 4. Networking
+## 5. Repository Boundaries
 
-The application uses a REST-based air-quality API.
+The domain layer defines repository interfaces for application-level
+data access.
 
-The networking stack is:
+Expected repository responsibilities include:
+
+### AirQualityRepository
+
+Responsible for:
+
+- retrieving current air quality for a location
+- retrieving historical hourly air-quality data
+- providing locally cached air-quality data when necessary
+
+### LocationSearchRepository
+
+Responsible for:
+
+- searching for locations from user-provided text
+
+### FavoritesRepository
+
+Responsible for:
+
+- saving favorite locations
+- retrieving favorite locations
+- removing favorite locations
+
+---
+
+## 6. Networking
+
+The application uses REST-based external APIs.
+
+The networking stack consists of:
 
 - Retrofit
 - OkHttp
 - Kotlin Coroutines
 
+The primary external data source is the Open-Meteo Air Quality API.
+
+A geocoding API/service is used to resolve user-entered place names
+into geographic coordinates.
+
 Network DTOs must remain separate from domain models.
 
-The UI and domain layers must not depend directly on Retrofit DTOs.
+The UI and domain layers must not depend directly on Retrofit DTOs or
+HTTP-specific representations.
 
 ---
 
-## 5. Local Persistence
+## 7. Local Persistence
 
 Room is used for:
 
-- Cached air-quality data
-- Favorite locations
-- Other local state required by the product
+- cached air-quality measurements
+- favorite locations
+- local state required by the product
 
-The repository is responsible for coordinating remote and local
-data sources.
+Historical hourly measurements are stored with their observation
+timestamp so that time-range queries can retrieve the last 24 hours.
+
+The local schema should support querying measurements by location and
+time range efficiently.
+
+Room entities remain separate from domain models.
 
 ---
 
-## 6. Offline Strategy
+## 8. Offline Strategy
+
+The repository coordinates remote and local data sources.
+
+### Freshness
+
+Cached air-quality data is considered fresh for up to 30 minutes after
+retrieval.
+
+### Online
 
 When network access is available:
 
-1. Fetch current data from the remote API.
+1. Request current data from the remote API.
 2. Persist relevant data locally.
-3. Expose the resulting domain model to the application.
+3. Return the resulting domain model.
+
+### Offline
 
 When network access is unavailable:
 
-1. Attempt to read the most recent cached data.
-2. Expose cached data when available.
-3. Clearly indicate stale/cached data to the presentation layer.
-
-If no cached data exists, expose an appropriate error/empty state.
+1. Attempt to read cached data from Room.
+2. If cached data exists, return it together with freshness metadata.
+3. If the cached data is older than 30 minutes, the application must
+   expose it as stale.
+4. If no cached data exists, expose an appropriate offline/error state.
 
 ---
 
-## 7. Dependency Injection
+## 9. Dependency Injection
 
 Hilt is used for dependency injection.
 
@@ -134,7 +218,7 @@ Avoid service locators and unnecessary global state.
 
 ---
 
-## 8. UI State
+## 10. UI State
 
 UI state should be explicit and observable.
 
@@ -146,20 +230,25 @@ Business logic should remain outside Composables.
 
 ---
 
-## 9. Location
+## 11. Location
 
 Location access is an Android platform concern.
 
-Android framework APIs should be isolated from the domain layer where
-practical.
+The application should isolate Android location APIs behind an
+application-level abstraction.
 
-Location permission handling belongs to the platform/presentation
-boundary, while location-related application logic should remain
-testable independently of Android framework details.
+The domain layer must not depend directly on Android location framework
+classes.
+
+The presentation layer handles permission-related user interaction,
+while the data/platform layer provides the actual device location.
+
+If permission is denied, the application remains usable through the
+location-search flow.
 
 ---
 
-## 10. Model Mapping
+## 12. Model Mapping
 
 External representations must not leak into the domain or presentation
 layers.
@@ -181,7 +270,7 @@ or database-specific representations.
 
 ---
 
-## 11. Testing
+## 13. Testing
 
 Testing should focus on behavior and architectural boundaries.
 
@@ -201,7 +290,7 @@ logic.
 
 ---
 
-## 12. Architectural Principles
+## 14. Architectural Principles
 
 ### Separation of Concerns
 
