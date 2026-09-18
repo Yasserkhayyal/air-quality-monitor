@@ -16,15 +16,39 @@ The application is organized into three primary layers:
 
 ### Presentation
 
-Responsibilities:
+The presentation layer uses Jetpack Compose and follows an MVI-style
+unidirectional data flow between Composables and ViewModels.
 
-- Compose UI
-- ViewModels
-- UI state
-- User interaction handling
+Each feature should define:
 
-The presentation layer should not contain business logic or direct
-network/database access.
+- UI State: the complete immutable state required to render the screen.
+- User Intent/Event: an explicit representation of actions initiated by
+  the user or UI.
+- ViewModel: receives intents/events, executes the required application
+  logic, and produces new UI state.
+- Side Effects: one-time effects such as navigation, transient messages,
+  or permission requests should be modeled separately from persistent
+  UI state when necessary.
+
+The expected interaction flow is:
+
+User Action
+→ UI Intent/Event
+→ ViewModel
+→ Domain logic / Use Case
+→ new UI State
+→ Composable renders the state
+
+Composables must not directly invoke domain or data-layer operations.
+
+UI state should be immutable and exposed from the ViewModel through
+StateFlow.
+
+The architecture should avoid multiple independent mutable state holders
+for the same screen state.
+
+MVI should be implemented as an architectural pattern, not through a
+third-party MVI framework unless a concrete requirement justifies one.
 
 ---
 
