@@ -341,3 +341,14 @@ Avoid introducing abstractions solely because they are considered
 
 External APIs, databases, and Android framework APIs should not leak
 unnecessarily into the core application logic.
+
+## Architectural Decision Scope
+
+Product requirements define observable product behavior.
+
+Architecture defines system boundaries, responsibilities, and dependency direction.
+
+Concrete implementation details such as exact domain model fields,
+repository method signatures, API provider selection, UI composition,
+and internal caching mechanisms are decided during implementation
+and must remain consistent with the documented product and architecture.
