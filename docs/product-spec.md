@@ -64,6 +64,12 @@ The dashboard displays:
 
 The presentation should prioritize understandable information.
 
+The application uses the AQI metric and category definitions provided
+by the selected air-quality data source.
+
+The AQI representation and category interpretation must remain
+consistent throughout the application.
+
 ---
 
 ### 4.3 Pollutant Details
@@ -113,10 +119,12 @@ Favorites do not require authentication and are stored locally.
 
 ### 4.6 Historical Data
 
-The application displays the last 24 hours of hourly air-quality
-measurements when the data source provides the required data.
+The application should display the last 24 hours of hourly
+air-quality measurements when the data source provides sufficient
+historical data.
 
-The historical view should support trend visualization over time.
+The historical view should display the available supported metrics
+for each measurement.
 
 Historical measurements may include:
 
@@ -129,19 +137,14 @@ Historical measurements may include:
 
 The exact fields displayed depend on data availability.
 
+The application should gracefully handle metrics that are unavailable
+for a specific measurement.
+
 ---
 
 ### 4.7 Offline Support
 
 The application should cache recently retrieved air-quality data.
-
-When network connectivity is unavailable:
-
-- Recently cached data may be displayed.
-- The application must clearly indicate that the displayed data is
-  cached or stale.
-- If no cached data exists, an understandable offline state must be shown.
-- The application caches recently retrieved air-quality data.
 
 A cached measurement is considered fresh for up to 30 minutes after
 its retrieval time.
@@ -150,8 +153,8 @@ When network connectivity is unavailable:
 
 - Cached data should be displayed when available.
 - Data older than 30 minutes must be clearly marked as stale.
-- The UI must indicate that the displayed data is cached/stale.
-- If no cached data exists, an understandable offline state is shown.
+- The UI must clearly indicate that the displayed data is cached or stale.
+- If no cached data exists, an understandable offline state must be shown.
 
 ---
 
@@ -166,6 +169,8 @@ The application should explicitly handle:
 - Invalid API response
 - Empty search results
 - No cached data available
+- Stale cached data
+- Missing individual pollutant values
 
 Errors shown to users should be understandable and actionable.
 
@@ -214,7 +219,7 @@ require an account for the core experience.
 
 ---
 
-## 8. Data Source
+## 8. Data Sources
 
 ### 8.1 Air Quality Data
 
@@ -229,5 +234,5 @@ using geographic coordinates.
 The application uses a geocoding service to convert user-entered
 place names into geographic coordinates.
 
-The geocoding implementation is an external data-source concern and
-must not be exposed directly to the presentation layer.
+The application uses a geocoding service to convert user-entered
+place names into geographic coordinates.

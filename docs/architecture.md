@@ -270,6 +270,9 @@ while the data/platform layer provides the actual device location.
 If permission is denied, the application remains usable through the
 location-search flow.
 
+The geocoding implementation is an external data-source concern and
+must not be exposed directly to the presentation layer.
+
 ---
 
 ## 12. Model Mapping
