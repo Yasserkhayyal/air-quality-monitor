@@ -61,6 +61,19 @@ requirements.
 Avoid premature abstraction and architecture that is disproportionate
 to the size of the application.
 
+### Multi-Module Architecture
+
+Follow the multi-module structure and dependency rules defined in
+`docs/architecture.md`.
+
+- Feature modules must not depend on other feature modules.
+- Feature modules depend on `:core:domain` for domain models and repository contracts.
+- `:core:data` implements the domain repository interfaces.
+- Feature modules must not depend directly on `:core:data`.
+- `:app` is the application composition root and owns application-level assembly and dependency injection configuration.
+- Do not introduce new modules without a concrete architectural reason.
+- Do not bypass module boundaries as a shortcut for implementation.
+
 ---
 
 ## 4. Presentation / MVI

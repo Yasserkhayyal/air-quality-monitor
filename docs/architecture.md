@@ -79,7 +79,68 @@ Responsibilities:
 
 ---
 
-## 3. Domain Concepts
+## 3. Module Structure
+
+The application uses a small multi-module Gradle structure to separate
+user-facing features from shared domain contracts and data infrastructure.
+
+### Modules
+
+- `:app`
+    - Application entry point
+    - MainActivity
+    - Application-level dependency injection composition
+    - Navigation orchestration
+    - Assembles the feature and core modules
+
+- `:feature:dashboard`
+    - Dashboard screen and presentation logic
+    - Dashboard ViewModel
+    - Dashboard UI state and intents
+    - Dashboard-specific Compose components
+
+- `:feature:search`
+    - Search screen and presentation logic
+    - Search ViewModel
+    - Search UI state and intents
+    - Search-specific Compose components
+
+- `:feature:favorites`
+    - Favorites screen and presentation logic
+    - Favorites ViewModel
+    - Favorites UI state and intents
+    - Favorites-specific Compose components
+
+- `:core:domain`
+    - Domain models
+    - Repository interfaces
+    - Domain-level business rules
+    - Use cases where meaningful
+
+- `:core:data`
+    - Repository implementations
+    - Remote and local data sources
+    - Retrofit APIs and DTOs
+    - Room entities and DAOs
+    - Data-layer mappers
+    - Cache and freshness coordination
+
+### Module Dependency Rules
+
+Feature modules depend on `:core:domain` and must not depend on
+`:core:data` or on other feature modules.
+
+`:core:data` depends on `:core:domain` and provides the concrete
+implementations of domain repository interfaces.
+
+`:app` is the composition root. It depends directly on the feature
+modules and on `:core:data` to assemble the application and configure
+dependency injection.
+
+`:app` should not contain business logic or bypass domain abstractions
+simply because it has access to the data module.
+
+## 4. Domain Concepts
 
 The primary domain concepts are:
 
@@ -110,7 +171,7 @@ Represents a location saved by the user for quick future access.
 The domain layer must not depend on API DTOs, Room entities, or Android
 framework classes.
 
-## 4. Data Flow
+## 5. Data Flow
 
 The expected data flow is:
 
@@ -131,7 +192,7 @@ ViewModel
 
 ---
 
-## 5. Repository Boundaries
+## 6. Repository Boundaries
 
 The domain layer defines repository interfaces for application-level
 data access.
@@ -162,7 +223,7 @@ Responsible for:
 
 ---
 
-## 6. Networking
+## 7. Networking
 
 The application uses REST-based external APIs.
 
@@ -184,7 +245,7 @@ HTTP-specific representations.
 
 ---
 
-## 7. Local Persistence
+## 8. Local Persistence
 
 Room is used for:
 
@@ -202,7 +263,7 @@ Room entities remain separate from domain models.
 
 ---
 
-## 8. Offline Strategy
+## 9. Offline Strategy
 
 The repository coordinates remote and local data sources.
 
@@ -231,7 +292,7 @@ When network access is unavailable:
 
 ---
 
-## 9. Dependency Injection
+## 10. Dependency Injection
 
 Hilt is used for dependency injection.
 
@@ -242,7 +303,7 @@ Avoid service locators and unnecessary global state.
 
 ---
 
-## 10. UI State
+## 11. UI State
 
 UI state should be explicit and observable.
 
@@ -254,7 +315,7 @@ Business logic should remain outside Composables.
 
 ---
 
-## 11. Location
+## 12. Location
 
 Location access is an Android platform concern.
 
@@ -275,7 +336,7 @@ must not be exposed directly to the presentation layer.
 
 ---
 
-## 12. Model Mapping
+## 13. Model Mapping
 
 External representations must not leak into the domain or presentation
 layers.
@@ -297,7 +358,7 @@ or database-specific representations.
 
 ---
 
-## 13. Testing
+## 14. Testing
 
 Testing should focus on behavior and architectural boundaries.
 
@@ -317,7 +378,7 @@ logic.
 
 ---
 
-## 14. Architectural Principles
+## 15. Architectural Principles
 
 ### Separation of Concerns
 
