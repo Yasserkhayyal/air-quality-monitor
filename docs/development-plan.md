@@ -89,9 +89,164 @@ through a stable public contract.
 Run the relevant Gradle build and tests after meaningful changes rather than
 waiting until the end of a phase.
 
+### 2.9 Design Before UI Implementation
+
+Before implementing a significant new screen or user flow, establish its
+visual and interaction direction first.
+
+Use the product specification as the source of truth for user-visible
+requirements. The UI design should translate those requirements into a clear,
+consumer-friendly interface without inventing new product behavior.
+
+Use Material 3 principles where appropriate and iterate through Compose
+Preview and the emulator to validate visual hierarchy, spacing, states,
+and interaction behavior.
+
 ---
 
-# 3. Phase 0 — Project and Multi-Module Setup
+# 3. Phase 0 — UI/UX Design and Visual Exploration
+
+**Status:** Not Started
+
+## Goal
+
+Establish an appealing, coherent Version 1 visual direction for Air Quality
+Monitor before substantial UI implementation begins.
+
+This phase is a collaborative design exercise between the product
+requirements, the developer, and Copilot. The goal is to decide what the
+screens should look like and how the important user states should be presented
+without introducing a separate design-tool dependency.
+
+## Design Direction
+
+The initial visual direction should be:
+
+- Clean and modern
+- Calm and trustworthy
+- Strong visual hierarchy around current air quality
+- Easy to scan on a phone
+- Accessible and readable
+- Polished enough to demonstrate production-oriented UI design
+
+Use Material 3 principles where appropriate while allowing a distinctive
+product identity through the chosen color system, typography, spacing, shapes,
+and component treatment.
+
+## Primary Screens and Flows
+
+Design at minimum:
+
+- Dashboard
+- Location Search
+- Favorites
+- Historical Air Quality view
+
+Define the main navigation and selection flows required to move between these
+screens without introducing unnecessary navigation complexity.
+
+## Required UI States
+
+Design the important product states, not only the successful content state:
+
+- Loading
+- Current data loaded
+- Cached data
+- Stale cached data
+- Network/API error
+- No cached data
+- Location permission request
+- Permission denied
+- Location unavailable
+- Search results
+- Empty search results
+- Favorites empty state
+- Historical data unavailable
+- Missing individual pollutant values
+
+Each state should have a clear hierarchy and understandable user action where
+an action is applicable.
+
+## Design System
+
+Establish a small, coherent UI language covering at least:
+
+- Color roles
+- Typography
+- Spacing
+- Shapes/corner treatment
+- Elevation where useful
+- Icons
+- Buttons
+- Search/input fields
+- Cards
+- Chips/badges
+- List items
+- AQI status presentation
+- Pollutant presentation
+- Loading, empty, and error components
+
+Create reusable Compose components only where there is a meaningful shared UI
+concept or concrete reuse case.
+
+Do not create a large generic component library for hypothetical future use.
+
+## Collaborative UI Design with Copilot
+
+Use Copilot as a design collaborator before substantial Compose implementation.
+
+For each significant screen or flow:
+
+1. Read the relevant product requirements.
+2. Propose the screen structure and visual hierarchy.
+3. Identify the important interaction and state variations.
+4. Identify meaningful reusable Compose components.
+5. Review the proposal before implementing substantial UI code.
+6. Implement the agreed direction in Compose.
+7. Use Compose Preview and the emulator to evaluate the result visually.
+8. Iterate based on concrete visual feedback.
+
+Copilot may propose alternative visual directions, but it must not invent new
+product functionality to justify those designs.
+
+## Design-to-Code Rules
+
+When implementing a UI screen or component:
+
+1. Read the relevant product requirement.
+2. Read the relevant architecture and Copilot constraints.
+3. Use the reviewed UI direction from this phase as the implementation reference.
+4. Preserve the intended hierarchy, spacing, typography, visual states, and
+   interaction intent.
+5. Translate the design into idiomatic Jetpack Compose.
+6. Do not copy design-tool implementation details into Android code.
+7. Do not introduce business logic into Composables to support visual behavior.
+8. Do not change product behavior merely to simplify the visual implementation.
+9. Surface any conflict between the product requirements and the proposed UI
+   before implementing the conflicting behavior.
+
+## Definition of Done
+
+- The primary Version 1 screens have an agreed visual direction.
+- Main navigation and user flows are understood.
+- Important success, loading, empty, error, offline, stale, and permission
+  states are considered.
+- Typography, spacing, colors, shapes, and major component treatment have an
+  initial coherent direction.
+- The design is specific enough to guide Compose implementation.
+- The first screen can be implemented without requiring another broad design
+  review.
+
+## Tests / Verification
+
+- Review the screen structure against the product specification.
+- Review state coverage against the documented product states.
+- Validate visual hierarchy and readability in Compose Preview or the emulator
+  once the first UI implementation exists.
+
+---
+
+# 4. Phase 1 — Project and Multi-Module Setup
 
 **Status:** Not Started
 
@@ -109,7 +264,7 @@ application still builds and launches before implementing product behavior.
 - `:feature:search`
 - `:feature:favorites`
 
-## Intended dependency direction
+## Intended Dependency Direction
 
 ```text
 Feature modules → :core:domain
@@ -134,8 +289,8 @@ application, including application-level dependency injection configuration.
 3. Configure module dependencies according to `docs/architecture.md`.
 4. Establish package structure within each module.
 5. Configure Hilt for the multi-module application.
-6. Ensure the concrete data implementations can be bound to domain
-   repository interfaces through the application dependency graph.
+6. Ensure the concrete data implementations can be bound to domain repository
+   interfaces through the application dependency graph.
 7. Preserve the existing Android project configuration unless a change is
    required for modularization.
 8. Avoid unrelated cleanup or refactoring.
@@ -162,7 +317,7 @@ application, including application-level dependency injection configuration.
 
 ---
 
-# 4. Phase 1 — Current Air Quality Vertical Slice
+# 5. Phase 2 — Current Air Quality Vertical Slice
 
 **Status:** Not Started
 
@@ -262,7 +417,7 @@ The first real product flow works end-to-end.
 
 ---
 
-# 5. Phase 2 — Local Cache and Offline Behavior
+# 6. Phase 3 — Local Cache and Offline Behavior
 
 **Status:** Not Started
 
@@ -292,7 +447,7 @@ A valid result may, for example, be cached and still fresh.
 
 ## Tasks
 
-1. Inspect the current domain and API models from Phase 1.
+1. Inspect the current domain and API models from Phase 2.
 2. Define the minimum Room representation required for current air-quality
    caching.
 3. Add the Room database and DAO.
@@ -301,11 +456,11 @@ A valid result may, for example, be cached and still fresh.
 6. Implement freshness evaluation in `:core:data`.
 7. Apply the product-defined 30-minute freshness policy.
 8. Support these repository scenarios:
-   - remote success
-   - remote failure + usable cache
-   - remote failure + no cache
-   - offline + usable cache
-   - offline + no cache
+    - remote success
+    - remote failure + usable cache
+    - remote failure + no cache
+    - offline + usable cache
+    - offline + no cache
 9. Expose freshness and data-origin semantics without exposing persistence
    details to the UI.
 10. Update the dashboard UI to identify cached/stale data clearly.
@@ -334,7 +489,7 @@ Add focused tests for:
 
 ---
 
-# 6. Phase 3 — Location Search
+# 7. Phase 4 — Location Search
 
 **Status:** Not Started
 
@@ -410,7 +565,7 @@ Test:
 
 ---
 
-# 7. Phase 4 — Favorites
+# 8. Phase 5 — Favorites
 
 **Status:** Not Started
 
@@ -479,7 +634,7 @@ Test:
 
 ---
 
-# 8. Phase 5 — Historical Air Quality
+# 9. Phase 6 — Historical Air Quality
 
 **Status:** Not Started
 
@@ -544,7 +699,7 @@ Test:
 
 ---
 
-# 9. Phase 6 — Location Permission, Error States, and UX Completion
+# 10. Phase 7 — Location Permission, Error States, and UX Completion
 
 **Status:** Not Started
 
@@ -634,7 +789,7 @@ The user receives understandable feedback for these states.
 
 ---
 
-# 10. Phase 7 — Final Testing, Architecture Review, and Cleanup
+# 11. Phase 8 — Final Testing, Architecture Review, and Cleanup
 
 **Status:** Not Started
 
@@ -695,24 +850,26 @@ still respects the product requirements and architectural boundaries.
 
 ---
 
-# 11. Implementation Order Summary
+# 12. Implementation Order Summary
 
 ```text
-Phase 0 — Project + Multi-Module Setup
+Phase 0 — UI/UX Design + Visual Exploration
         ↓
-Phase 1 — Current AQI Vertical Slice
+Phase 1 — Project + Multi-Module Setup
         ↓
-Phase 2 — Room + Cache + Offline/Stale Behavior
+Phase 2 — Current AQI Vertical Slice
         ↓
-Phase 3 — Location Search
+Phase 3 — Room + Cache + Offline/Stale Behavior
         ↓
-Phase 4 — Favorites
+Phase 4 — Location Search
         ↓
-Phase 5 — Historical Air Quality
+Phase 5 — Favorites
         ↓
-Phase 6 — Permission + Error + UX Completion
+Phase 6 — Historical Air Quality
         ↓
-Phase 7 — Testing + Architecture Review + Cleanup
+Phase 7 — Permission + Error + UX Completion
+        ↓
+Phase 8 — Testing + Architecture Review + Cleanup
 ```
 
 Each phase should leave the project in a buildable state.
@@ -723,7 +880,7 @@ small amount of preparation.
 
 ---
 
-# 12. Decision Rules During Implementation
+# 13. Decision Rules During Implementation
 
 The development plan intentionally does not define every concrete technical
 detail in advance.
@@ -747,7 +904,7 @@ When an implementation decision is required:
 
 ---
 
-# 13. Phase Execution Rule for Copilot
+# 14. Phase Execution Rule for Copilot
 
 The full development roadmap is documented here from the beginning, but
 implementation should proceed one phase at a time.
@@ -764,6 +921,9 @@ When working on a phase, Copilot should:
 7. Report what was changed, what was verified, and any decisions that were
    necessary during implementation.
 
+For UI work, Copilot should first use the reviewed UI direction from Phase 0,
+then validate the result through Compose Preview and the emulator.
+
 Do not ask for another broad architecture review when the current issue is a
 normal implementation detail covered by the existing architecture.
 
@@ -773,7 +933,7 @@ before proceeding.
 
 ---
 
-# 14. Progress Tracking
+# 15. Progress Tracking
 
 Update the status of a phase only when its Definition of Done has been met.
 

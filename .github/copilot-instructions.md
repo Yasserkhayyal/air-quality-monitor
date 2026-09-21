@@ -4,27 +4,17 @@
 
 This repository contains the Air Quality Monitor Android application.
 
-Product requirements are defined in:
+Product requirements are defined in `docs/product-spec.md`.
+Architecture and module boundaries are defined in `docs/architecture.md`.
+Implementation order is defined in `docs/development-plan.md`.
 
-`docs/product-spec.md`
-
-Architecture and technical design are defined in:
-
-`docs/architecture.md`
-
-Treat these documents as the source of truth.
-
-Do not invent major product requirements, business rules, user flows,
-or architectural decisions that are not defined in those documents.
-
-When a requirement is ambiguous or missing, identify the ambiguity
-before implementation rather than silently inventing a solution.
-
----
+Treat these documents as source of truth for their respective concerns.
+Do not invent major product requirements, business rules, or architectural
+decisions that are not supported by them.
 
 ## 2. Technology Stack
 
-The project uses:
+The current architecture uses:
 
 - Kotlin
 - Jetpack Compose
@@ -34,307 +24,291 @@ The project uses:
 - Retrofit
 - OkHttp
 - Room
+- Open-Meteo REST API
+- Geocoding service for location search
+- Android location APIs at the platform boundary
 
-Do not introduce additional libraries unless there is a concrete
-technical benefit.
-
-When proposing a new dependency, explain why it is necessary and what
-problem it solves.
-
----
+Do not add libraries without a concrete benefit. Explain any new dependency
+before introducing it when the change is non-trivial.
 
 ## 3. Architecture
 
-Follow the layered architecture defined in `docs/architecture.md`:
+Follow the Presentation / Domain / Data boundaries defined in
+`docs/architecture.md`.
 
-- Presentation
-- Domain
-- Data
-
-Respect the dependency direction between these layers.
-
-Do not bypass architectural boundaries for convenience.
-
-Prefer the simplest implementation that satisfies the documented
-requirements.
-
-Avoid premature abstraction and architecture that is disproportionate
-to the size of the application.
+Do not bypass those boundaries.
+Prefer the simplest implementation that satisfies the architecture.
+Avoid premature abstraction.
 
 ### Multi-Module Architecture
 
 Follow the multi-module structure and dependency rules defined in
-`docs/architecture.md`.
+`docs/architecture.md` and `docs/development-plan.md`.
 
-- Feature modules must not depend on other feature modules.
-- Feature modules depend on `:core:domain` for domain models and repository contracts.
-- `:core:data` implements the domain repository interfaces.
+- `:app` is the application composition root.
+- `:app` may depend on feature modules and `:core:data` for application
+  assembly and dependency injection configuration.
+- Feature modules depend on `:core:domain`.
 - Feature modules must not depend directly on `:core:data`.
-- `:app` is the application composition root and owns application-level assembly and dependency injection configuration.
-- Do not introduce new modules without a concrete architectural reason.
-- Do not bypass module boundaries as a shortcut for implementation.
-
----
+- Feature modules must not depend on other feature modules.
+- `:core:data` depends on `:core:domain` and implements its repository
+  interfaces.
+- Do not use transitive Gradle dependencies to bypass intentional module
+  boundaries.
+- Do not introduce additional modules without a concrete architectural
+  reason.
 
 ## 4. Presentation / MVI
 
-The presentation layer must follow the MVI-style unidirectional data
-flow defined in `docs/architecture.md`.
+Use MVI-style unidirectional data flow as defined by the architecture:
 
-Use:
+User Action → Intent → ViewModel → Domain → UI State → Composable
 
-- Immutable UI state
-- Explicit UI intents/events
-- ViewModels as state holders and intent processors
-- StateFlow for exposing persistent UI state
-- Separate handling for one-time side effects when required
+Follow these rules:
 
-The expected flow is:
+- UI state is immutable.
+- Expose observable UI state through StateFlow where appropriate.
+- Intents/events represent user or external input to the ViewModel.
+- ViewModels process intents and update UI state.
+- One-time effects are handled separately from persistent UI state.
+- Composables render state and emit actions.
+- Composables must not access repositories, DAOs, Retrofit APIs, or other
+  infrastructure directly.
+- Do not put business logic in Composables.
+- Retry actions are intents, not one-time side effects.
+- Android permission APIs must not be invoked directly from ViewModels.
 
-User Action
-→ Intent/Event
-→ ViewModel
-→ Domain logic / Use Case
-→ UI State
-→ Composable
-
-Composables should:
-
-- Render the provided state.
-- Emit explicit intents/events.
-- Avoid direct access to repositories, DAOs, APIs, or other
-  infrastructure.
-- Avoid business logic.
-
-Do not mix competing state-management approaches within the same
-feature without a concrete reason.
-
-MVI should be implemented using standard Kotlin/Android mechanisms
-unless a third-party MVI framework provides a concrete, documented
-benefit.
-
----
+Do not introduce a third-party MVI framework unless there is a concrete
+justification that cannot be satisfied with standard Kotlin, coroutines,
+Flow, and StateFlow.
 
 ## 5. Compose Componentization and Reuse
 
-Prefer small, focused Composables with clear responsibilities.
+Prefer focused Composables organized around meaningful UI responsibility.
 
-Extract reusable Composables when:
+Extract a reusable Composable when:
 
-- they represent a meaningful shared UI concept;
-- the same UI structure or behavior is used in multiple places;
-- reuse improves consistency, maintainability, or testability.
+- it represents a meaningful shared UI concept
+- the same structure or behavior is used in multiple places
+- reuse improves consistency, maintainability, or testability
 
-Do not create generic UI abstractions solely for the sake of reuse.
+Do not extract components solely to maximize reuse or to make files smaller.
+Do not create generic abstractions without a concrete reuse case.
 
-Keep feature-specific UI scoped to its feature when there is no clear
-benefit to sharing it.
+Feature-specific UI should remain within the owning feature module when there
+is no clear cross-feature reuse case.
 
-Preserve state hoisting and keep business logic outside Composables.
+Shared UI components must remain independent of business logic and data access.
 
----
+## 6. UI Design and Collaboration
 
-## 6. Domain
+Before implementing a significant new screen or user flow, use
+`docs/product-spec.md` and the relevant phase in `docs/development-plan.md`
+to establish the intended UI behavior and visual direction.
 
-The domain layer represents application concepts and business rules.
+For substantial UI work:
 
-Prefer domain models that represent application needs rather than
-external API or database structures.
+1. Propose the screen structure and visual hierarchy before writing substantial
+   Compose code.
+2. Identify important UI states and interactions.
+3. Identify meaningful reusable components.
+4. Review the proposed direction against the product requirements.
+5. Implement the agreed design using idiomatic Jetpack Compose.
+6. Validate the result with Compose Preview and the emulator.
+7. Iterate based on concrete visual feedback.
 
-Repository interfaces belong at the domain boundary when they represent
-application-level data access.
+Prefer Material 3 principles and a clear, accessible visual hierarchy.
 
-Use cases should be introduced when they provide meaningful separation,
-reuse, or testability.
+Do not invent product functionality merely to make a UI more interesting.
+Do not create a large generic design system for hypothetical future use.
+Do not make a substantially different visual design when an agreed UI
+direction already exists.
 
-Do not automatically create an interface and implementation pair for
-every use case or class.
+The UI design process is a development-time collaboration and must not add
+a design-tool runtime dependency to the Android application.
 
-The domain layer must not depend directly on Retrofit, OkHttp, Room, or
-Android framework APIs where practical.
+If the proposed UI conflicts with the product specification or architecture,
+identify the conflict before implementation rather than silently changing
+the product behavior.
 
----
+## 7. Domain
 
-## 7. Data
+The Domain layer owns:
 
-The data layer owns:
+- domain models
+- repository interfaces
+- meaningful business rules
+- use cases where they provide meaningful separation
 
-- Repository implementations
-- Remote data sources
-- Local data sources
+Keep Domain independent from Retrofit, OkHttp, Room, and Android framework
+types where architectural isolation requires it.
+
+Do not create interface/implementation pairs for every class or use case
+without a concrete reason.
+
+Do not move cache-freshness implementation details into Domain.
+
+## 8. Data
+
+The Data layer owns:
+
+- repository implementations
+- remote and local data sources
 - Retrofit APIs
-- Network DTOs
-- Room entities
-- DAOs
-- Mappers
-- Cache coordination
+- DTOs
+- Room entities and DAOs
+- Data-layer mappers
+- remote/local coordination
+- cache/freshness behavior
+- infrastructure error handling and translation
 
-Keep infrastructure-specific representations inside the data layer.
+Keep infrastructure-specific representations inside Data.
 
-Do not expose Retrofit DTOs or Room entities directly to the domain or
-presentation layers.
+DTO/entity mapping belongs in Data.
 
-DTO-to-domain and entity-to-domain mapping belongs in the data layer.
+Do not expose DTOs, Room entities, Retrofit response types, HTTP exceptions,
+or other infrastructure types to Domain or Presentation.
 
----
+## 9. Networking
 
-## 8. Networking
+Use REST APIs with Retrofit and OkHttp as defined by the architecture.
 
-The application uses REST APIs through Retrofit and OkHttp.
+Open-Meteo is the initial air-quality data source.
+A geocoding service provides location search.
 
-Open-Meteo is the primary air-quality data source.
+Inspect the actual external response before defining DTOs around assumptions.
 
-A geocoding service is used for location search.
+Handle remote failures explicitly and translate infrastructure-specific
+failures into appropriate application/domain outcomes.
 
-Treat external API contracts as external boundaries.
+Do not silently swallow networking exceptions.
 
-Do not allow API-specific field names, response types, or Retrofit
-annotations to leak into domain models unnecessarily.
+## 10. Persistence and Offline Behavior
 
-Handle network failures explicitly.
+Room is the local persistence mechanism defined by the architecture.
 
-Do not silently swallow exceptions.
+Follow the product-defined freshness policy:
 
----
+- a cached measurement is fresh for up to 30 minutes
+- older cached data is stale
+- cached/stale data must be distinguishable from fresh remote data
 
-## 9. Persistence and Offline Behavior
+Freshness decisions belong in the Data layer.
 
-Room is used for local persistence and caching.
+Keep these concepts separate:
 
-Follow the product's documented cache freshness policy.
+- freshness
+- data origin
+- error/unavailability
 
-Do not invent or silently change cache semantics.
+Do not flatten them into a single generic status unless there is a concrete
+reason.
 
-Repository implementations are responsible for coordinating remote and
-local data sources.
+Do not over-design historical persistence before the actual API shape and
+product usage justify it.
 
-Cached and stale data must remain distinguishable from fresh data.
+## 11. Location
 
-Persistence-specific models must remain separate from domain models.
+Keep Android location APIs at the platform boundary.
 
----
+The ViewModel may express that permission is required through a one-time
+side effect, but Android permission APIs must be invoked by the appropriate
+Composable/Activity/platform boundary.
 
-## 10. Location
+Location search must remain usable when device-location permission is denied.
 
-Location is an Android platform concern.
+Do not repeatedly request permission without a product-driven reason.
 
-Keep Android location APIs isolated from the domain layer where
-practical.
+Geocoding implementation details remain isolated inside Data.
 
-Location permission handling belongs at the appropriate
-presentation/platform boundary.
+## 12. Testing
 
-The application must remain usable through location search when
-location permission is denied.
+Test behavior and architectural boundaries rather than implementation details.
 
-Avoid unnecessary repeated permission requests.
+Prioritize meaningful tests for:
 
----
+- domain business rules
+- mapping
+- repository behavior
+- cache freshness and fallback behavior
+- ViewModel state transitions
+- important Compose user flows
+- permission-related presentation behavior
 
-## 11. Testing
+Do not rely on live external APIs for application logic tests.
+Use fakes, fixtures, or controlled test doubles where appropriate.
 
-Test behavior and architectural boundaries rather than implementation
-details.
+When meaningful behavior changes, update or add regression tests.
 
-Add or update tests when changing meaningful behavior.
+## 13. Code Quality
 
-Prioritize tests for:
+Prefer idiomatic Kotlin and immutable data.
 
-- Business rules
-- Data mapping
-- Repository behavior
-- Cache freshness behavior
-- ViewModel state transformations
-- Important Compose user flows
-
-Do not depend on the real external network for application-logic tests.
-
-When fixing a bug, add a regression test when practical.
-
----
-
-## 12. Code Quality
-
-Prefer idiomatic Kotlin.
-
-Prefer immutable data.
-
-Keep classes focused and reasonably small.
-
-Avoid duplicated business logic.
+Keep classes focused and responsibilities clear.
 
 Avoid unnecessary global state and service locators.
 
-Do not introduce abstractions without a concrete benefit.
+Do not duplicate business logic across layers.
 
-Do not perform unrelated cleanup while implementing a task.
+Do not perform unrelated cleanup or refactoring while implementing a phase.
 
-Follow existing project conventions unless there is a concrete reason to
-change them.
+Preserve existing conventions unless there is a concrete reason to change them.
 
----
+## 14. Working Process
 
-## 13. Working Process
+For non-trivial changes, follow:
 
-Before making non-trivial changes:
+Plan → Review → Implement → Build/Test → Review
 
-1. Inspect the existing implementation.
-2. Read the relevant sections of `docs/product-spec.md`.
-3. Read the relevant sections of `docs/architecture.md`.
-4. Identify the files that actually need to change.
-5. Explain the intended approach before making large or architectural
-   changes.
+Before modifying code:
 
-For non-trivial tasks, prefer:
-
-Plan
-→ Review
-→ Implement
-→ Build/Test
-→ Review
-
-Do not implement future features that are outside the current task.
+1. Read the relevant source-of-truth documents.
+2. Read the applicable phase in `docs/development-plan.md`.
+3. Inspect the existing repository and relevant files.
+4. Identify the smallest set of files required.
+5. Explain the approach before making large or architectural changes.
 
 After making changes:
 
 1. Run the relevant Gradle build and tests.
 2. Fix failures caused by the changes.
-3. Review the resulting diff.
-4. Summarize changed files.
-5. Summarize important architectural decisions or assumptions.
+3. Review the Git diff.
+4. Check module and layer boundaries.
+5. Summarize changed files and important implementation assumptions.
 
----
+For UI work, validate the implementation in Compose Preview and/or the
+emulator and iterate on concrete visual feedback.
 
-## 14. Handling Ambiguity
+Do not implement later development phases prematurely.
 
-When the product specification and architecture are incomplete or
-ambiguous:
+## 15. Handling Ambiguity
 
-- Do not invent major product behavior.
-- Identify the ambiguity explicitly.
-- Distinguish product decisions from implementation decisions.
-- Explain relevant trade-offs.
-- Ask for clarification before making a significant assumption.
+Do not invent major product behavior.
 
-If an implementation detail can safely be chosen without affecting
-product behavior, choose the simplest reasonable option and state the
-assumption.
+When ambiguity is encountered:
 
----
+- identify the ambiguity
+- determine whether it is a product, architecture, or implementation issue
+- use the simplest reasonable implementation when it is a routine detail
+- ask for clarification before making a significant product or architectural
+  assumption
 
-## 15. Change Scope
+Do not restart broad architecture reviews for routine implementation details
+that are already covered by the existing documents.
 
-Keep changes surgical.
+## 16. Change Scope
 
-Modify only the files necessary to accomplish the requested task.
+Keep changes surgical and phase-scoped.
 
 Do not:
 
-- refactor unrelated code;
-- introduce speculative abstractions;
-- add unrelated dependencies;
-- change documented architecture without justification;
-- modify product requirements as a side effect of implementation.
+- introduce unrelated refactoring
+- add speculative abstractions
+- add unrelated dependencies
+- create new modules without a concrete reason
+- change product requirements as a side effect of implementation
+- bypass module boundaries as a shortcut
+- alter the architecture without explicit justification
 
-When a requested change conflicts with the documented product or
-architecture, identify the conflict before implementing it.
+If a change reveals a genuine contradiction between the product specification,
+architecture, or development plan, surface it before proceeding.
