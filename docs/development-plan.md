@@ -104,7 +104,78 @@ and interaction behavior.
 
 ---
 
-# 3. Phase 0 — UI/UX Design and Visual Exploration
+# 3. Phase 0 — Project and Multi-Module Setup
+
+**Status:** Completed
+
+## Goal
+
+Establish the intended multi-module Gradle structure and verify that the
+application still builds and launches before implementing product behavior.
+
+## Modules
+
+- `:app`
+- `:core:domain`
+- `:core:data`
+- `:feature:dashboard`
+- `:feature:search`
+- `:feature:favorites`
+
+## Intended Dependency Direction
+
+```text
+Feature modules → :core:domain
+:core:data     → :core:domain
+:app           → feature modules
+:app           → :core:data
+```
+
+The important architectural relationship remains:
+
+```text
+Feature → Domain ← Data
+```
+
+`:app` is the composition root and is responsible for assembling the
+application, including application-level dependency injection configuration.
+
+## Tasks
+
+1. Create the required Gradle modules.
+2. Keep `:app` as the Android application entry point.
+3. Configure module dependencies according to `docs/architecture.md`.
+4. Establish package structure within each module.
+5. Configure Hilt for the multi-module application.
+6. Ensure the concrete data implementations can be bound to domain repository
+   interfaces through the application dependency graph.
+7. Preserve the existing Android project configuration unless a change is
+   required for modularization.
+8. Avoid unrelated cleanup or refactoring.
+9. Build the project.
+10. Launch the application and verify the app shell still works.
+
+## Definition of Done
+
+- All required modules exist.
+- Feature modules do not depend on one another.
+- Feature modules do not depend directly on `:core:data`.
+- `:core:data` depends on `:core:domain`.
+- `:app` can assemble the feature and data modules.
+- Hilt configuration compiles.
+- The application builds successfully.
+- The application launches successfully.
+
+## Tests / Verification
+
+- Gradle sync succeeds.
+- Debug build succeeds.
+- Existing tests, if any, still pass.
+- Module dependency graph matches the architecture.
+
+---
+
+# 4. Phase 1 — UI/UX Design and Visual Exploration
 
 **Status:** Not Started
 
@@ -243,77 +314,6 @@ When implementing a UI screen or component:
 - Review state coverage against the documented product states.
 - Validate visual hierarchy and readability in Compose Preview or the emulator
   once the first UI implementation exists.
-
----
-
-# 4. Phase 1 — Project and Multi-Module Setup
-
-**Status:** Not Started
-
-## Goal
-
-Establish the intended multi-module Gradle structure and verify that the
-application still builds and launches before implementing product behavior.
-
-## Modules
-
-- `:app`
-- `:core:domain`
-- `:core:data`
-- `:feature:dashboard`
-- `:feature:search`
-- `:feature:favorites`
-
-## Intended Dependency Direction
-
-```text
-Feature modules → :core:domain
-:core:data     → :core:domain
-:app           → feature modules
-:app           → :core:data
-```
-
-The important architectural relationship remains:
-
-```text
-Feature → Domain ← Data
-```
-
-`:app` is the composition root and is responsible for assembling the
-application, including application-level dependency injection configuration.
-
-## Tasks
-
-1. Create the required Gradle modules.
-2. Keep `:app` as the Android application entry point.
-3. Configure module dependencies according to `docs/architecture.md`.
-4. Establish package structure within each module.
-5. Configure Hilt for the multi-module application.
-6. Ensure the concrete data implementations can be bound to domain repository
-   interfaces through the application dependency graph.
-7. Preserve the existing Android project configuration unless a change is
-   required for modularization.
-8. Avoid unrelated cleanup or refactoring.
-9. Build the project.
-10. Launch the application and verify the app shell still works.
-
-## Definition of Done
-
-- All required modules exist.
-- Feature modules do not depend on one another.
-- Feature modules do not depend directly on `:core:data`.
-- `:core:data` depends on `:core:domain`.
-- `:app` can assemble the feature and data modules.
-- Hilt configuration compiles.
-- The application builds successfully.
-- The application launches successfully.
-
-## Tests / Verification
-
-- Gradle sync succeeds.
-- Debug build succeeds.
-- Existing tests, if any, still pass.
-- Module dependency graph matches the architecture.
 
 ---
 
