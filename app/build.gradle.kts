@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.ksp)
 }
 
 android {
@@ -44,6 +46,26 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Phase 0 module wiring
+    implementation(project(":feature:dashboard"))
+    implementation(project(":feature:search"))
+    implementation(project(":feature:favorites"))
+    implementation(project(":core:data"))
+
+    // Architecture-required dependency set
+    implementation(libs.hilt.android)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    implementation(libs.kotlinx.coroutines.android)
+
+    ksp(libs.hilt.compiler)
+    ksp(libs.room.compiler)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

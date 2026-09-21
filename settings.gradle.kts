@@ -24,3 +24,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "AirQualityMonitor"
 include(":app")
+include(":core:domain")
+include(":core:data")
+include(":feature:dashboard")
+include(":feature:search")
+include(":feature:favorites")
