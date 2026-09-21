@@ -31,6 +31,28 @@ The current architecture uses:
 Do not add libraries without a concrete benefit. Explain any new dependency
 before introducing it when the change is non-trivial.
 
+## Dependency Management
+
+All external library and Gradle plugin dependencies must be declared
+and versioned through `gradle/libs.versions.toml`.
+
+Module and project build files must reference dependencies through the
+version catalog rather than hard-coding Maven coordinates or versions.
+
+Do not introduce unused dependencies merely to prepare for future phases.
+
+Instead, define the dependency in `gradle/libs.versions.toml` and use
+the generated `libs.*` accessor from the build file.
+
+Before adding a dependency:
+
+- Check whether it already exists in the version catalog.
+- Reuse an existing catalog entry when appropriate.
+- Add a new catalog entry only when the dependency is genuinely required.
+- Keep versions centralized and avoid duplicate version definitions.
+
+Do not introduce unused dependencies merely to prepare for future phases.
+
 ## 3. Architecture
 
 Follow the Presentation / Domain / Data boundaries defined in

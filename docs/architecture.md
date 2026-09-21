@@ -140,6 +140,14 @@ dependency injection.
 `:app` should not contain business logic or bypass domain abstractions
 simply because it has access to the data module.
 
+### Dependency Management
+
+External library and Gradle plugin versions are centralized in
+`gradle/libs.versions.toml`.
+
+Module build files should reference the version catalog rather than
+hard-coding dependency versions.
+
 ## 4. Domain Concepts
 
 The primary domain concepts are:
