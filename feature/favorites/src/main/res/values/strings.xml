@@ -1,0 +1,7 @@
+<resources>
+    <string name="favorites_title">Favorites</string>
+    <string name="favorites_empty_title">No favorite locations yet.</string>
+    <string name="favorites_empty_message">Save locations to access their air quality quickly.</string>
+    <string name="favorites_search">Search for a location</string>
+    <string name="content_description_back">Go back</string>
+</resources>

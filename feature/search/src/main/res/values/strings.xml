@@ -1,0 +1,9 @@
+<resources>
+    <string name="search_title">Search location</string>
+    <string name="search_field_label">City or location</string>
+    <string name="search_progress">Searching locations...</string>
+    <string name="search_hint">Search for a city or place to view its air quality.</string>
+    <string name="search_result_title">Select searched location</string>
+    <string name="search_result_subtitle">Coordinates will be provided by geocoding.</string>
+    <string name="content_description_back">Go back</string>
+</resources>
