@@ -206,7 +206,7 @@ and component treatment.
 
 ## Primary Screens and Flows
 
-Design at minimum:
+Explore the primary product screens and their normal user flows:
 
 - Dashboard
 - Location Search
@@ -216,27 +216,14 @@ Design at minimum:
 Define the main navigation and selection flows required to move between these
 screens without introducing unnecessary navigation complexity.
 
-## Required UI States
+Consider non-happy-path situations only where they materially affect the
+visual design, layout, or interaction pattern, such as stale data,
+unavailable data, empty results, or permission denial.
 
-Design the important product states, not only the successful content state:
+Do not define concrete UI state models, state classes, repository outcomes,
+or state transitions in this phase.
 
-- Loading
-- Current data loaded
-- Cached data
-- Stale cached data
-- Network/API error
-- No cached data
-- Location permission request
-- Permission denied
-- Location unavailable
-- Search results
-- Empty search results
-- Favorites empty state
-- Historical data unavailable
-- Missing individual pollutant values
-
-Each state should have a clear hierarchy and understandable user action where
-an action is applicable.
+Those decisions are made during the relevant implementation phase.
 
 ## Design System
 
