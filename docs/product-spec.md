@@ -153,7 +153,7 @@ When network connectivity is unavailable:
 
 - Cached data should be displayed when available.
 - Data older than 30 minutes must be clearly marked as stale.
-- The UI must clearly indicate that the displayed data is cached or stale.
+- The UI should clearly communicate when the displayed data may be outdated.
 - If no cached data exists, an understandable offline state must be shown.
 
 ---

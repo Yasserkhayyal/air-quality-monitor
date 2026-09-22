@@ -229,6 +229,13 @@ reason.
 Do not over-design historical persistence before the actual API shape and
 product usage justify it.
 
+Do not expose internal data-origin information such as "Cached" as a
+user-facing status unless the product requirements provide a concrete
+user benefit.
+
+Prefer user-facing language that communicates freshness or that data may
+be outdated.
+
 ## 11. Location
 
 Keep Android location APIs at the platform boundary.

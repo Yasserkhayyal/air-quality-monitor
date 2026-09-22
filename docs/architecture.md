@@ -274,6 +274,11 @@ Room entities remain separate from domain models.
 ## 9. Offline Strategy
 
 The repository coordinates remote and local data sources.
+Data origin (remote or cache) is an internal data-layer concern and does
+not need to be exposed directly to the user.
+
+User-facing presentation should prioritize data freshness and clearly
+communicate when information may be stale.
 
 ### Freshness
 
