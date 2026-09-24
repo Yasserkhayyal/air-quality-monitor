@@ -31,6 +31,11 @@ The current architecture uses:
 Do not add libraries without a concrete benefit. Explain any new dependency
 before introducing it when the change is non-trivial.
 
+Don't introduce deprecated code
+
+Always check for required permissions before introducing any code that only functions
+properly when these permissions are granted
+
 ## Dependency Management
 
 All external library and Gradle plugin dependencies must be declared
