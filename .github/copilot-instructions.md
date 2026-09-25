@@ -27,6 +27,8 @@ The current architecture uses:
 - Open-Meteo REST API
 - Geocoding service for location search
 - Android location APIs at the platform boundary
+- MockK for Unit Tests, AndroidJunit4 and ComposeTestRule for UI and Compose screen tests
+- Compose Preview Screenshot testing to test visual attributes and layout regression in Composables
 
 Do not add libraries without a concrete benefit. Explain any new dependency
 before introducing it when the change is non-trivial.
@@ -257,6 +259,18 @@ Geocoding implementation details remain isolated inside Data.
 
 ## 12. Testing
 
+Use the following testing tools and frameworks consistently:
+
+- **Unit tests:** JUnit 4 with **MockK** for mocking and verification.
+- **Android/UI tests:** **AndroidJUnit4** with **ComposeTestRule** for
+  instrumented Android and Compose UI testing.
+- **Compose screenshot tests:** Use **Compose Preview Screenshot Testing**
+  for visual regression testing of Composable rendering, including layout
+  and visual attributes.
+
+Do not introduce alternative mocking or UI-testing frameworks unless there
+is a concrete technical reason and the change is explicitly justified.
+
 Test behavior and architectural boundaries rather than implementation details.
 
 Prioritize meaningful tests for:
@@ -267,7 +281,7 @@ Prioritize meaningful tests for:
 - cache freshness and fallback behavior
 - ViewModel state transitions
 - important Compose user flows
-- permission-related presentation behavior
+- permission-related presentation state and side effects
 
 Do not rely on live external APIs for application logic tests.
 Use fakes, fixtures, or controlled test doubles where appropriate.
