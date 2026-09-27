@@ -20,7 +20,7 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAirQualityRepository(
-        implementation: AirQualityRepositoryImpl
+        implementation: AirQualityRepositoryImpl,
     ): AirQualityRepository
 }
 
@@ -29,26 +29,23 @@ abstract class RepositoryModule {
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor(
-                HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BASIC
-                }
-            )
-            .build()
+    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(
+            HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BASIC
+            },
+        )
+        .build()
 
     @Provides
     @Singleton
-    fun provideRetrofit(client: OkHttpClient): Retrofit =
-        Retrofit.Builder()
-            .baseUrl("https://air-quality-api.open-meteo.com/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+    fun provideRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl("https://air-quality-api.open-meteo.com/")
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
     @Provides
     @Singleton
-    fun provideOpenMeteoApi(retrofit: Retrofit): OpenMeteoApi =
-        retrofit.create(OpenMeteoApi::class.java)
+    fun provideOpenMeteoApi(retrofit: Retrofit): OpenMeteoApi = retrofit.create(OpenMeteoApi::class.java)
 }

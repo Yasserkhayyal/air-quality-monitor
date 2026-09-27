@@ -6,7 +6,6 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQuality
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,18 +13,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class DashboardUiState(
     val isLoading: Boolean = false,
     val snapshot: AirQualitySnapshot? = null,
     val locationAddress: String? = null,
-    val error: DashboardError? = null
+    val error: DashboardError? = null,
 )
 
 enum class DashboardError {
     PermissionDenied,
     LocationUnavailable,
-    DataUnavailable
+    DataUnavailable,
 }
 
 sealed interface DashboardIntent {
@@ -43,7 +43,7 @@ sealed interface DashboardEffect {
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val repository: AirQualityRepository
+    private val repository: AirQualityRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -54,7 +54,9 @@ class DashboardViewModel @Inject constructor(
     fun onIntent(intent: DashboardIntent) {
         when (intent) {
             DashboardIntent.Started,
-            DashboardIntent.Retry -> requestPermission()
+            DashboardIntent.Retry,
+            -> requestPermission()
+
             is DashboardIntent.PermissionResult -> {
                 if (intent.granted) {
                     emitEffect(DashboardEffect.RequestCurrentLocation)
@@ -63,11 +65,12 @@ class DashboardViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             snapshot = null,
-                            error = DashboardError.PermissionDenied
+                            error = DashboardError.PermissionDenied,
                         )
                     }
                 }
             }
+
             is DashboardIntent.LocationResult -> {
                 intent.location?.let(::loadAirQuality)
                     ?: _uiState.update {
@@ -75,7 +78,7 @@ class DashboardViewModel @Inject constructor(
                             isLoading = false,
                             snapshot = null,
                             locationAddress = intent.location?.address,
-                            error = DashboardError.LocationUnavailable
+                            error = DashboardError.LocationUnavailable,
                         )
                     }
             }
@@ -98,7 +101,7 @@ class DashboardViewModel @Inject constructor(
                     _uiState.value = DashboardUiState(
                         isLoading = false,
                         snapshot = null,
-                        error = DashboardError.DataUnavailable
+                        error = DashboardError.DataUnavailable,
                     )
                 }
         }

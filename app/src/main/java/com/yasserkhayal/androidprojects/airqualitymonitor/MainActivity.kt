@@ -1,6 +1,5 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor
 
-import android.os.Bundle
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -9,15 +8,15 @@ import android.location.Geocoder
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
+import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.Handler
 import android.os.Looper
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -40,6 +39,7 @@ import dagger.hilt.android.AndroidEntryPoint
 private const val LOCATION_REQUEST_TIMEOUT_MS = 10_000L
 private const val LOCATION_UPDATE_INTERVAL_MS = 1_000L
 private const val LOCATION_UPDATE_DISTANCE_METERS = 10f
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,20 +57,20 @@ private enum class Destination {
     Dashboard,
     Search,
     Favorites,
-    History
+    History,
 }
 
 @Composable
 private fun AirQualityApp() {
-    var destination by rememberSaveable { androidx.compose.runtime.mutableStateOf(Destination.Dashboard) }
+    var destination by rememberSaveable { mutableStateOf(Destination.Dashboard) }
     var permissionCallback by remember { mutableStateOf<((Boolean) -> Unit)?>(null) }
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
+        ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         permissionCallback?.invoke(
             permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true,
         )
         permissionCallback = null
     }
@@ -82,12 +82,12 @@ private fun AirQualityApp() {
                     val hasPermission =
                         ContextCompat.checkSelfPermission(
                             context,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
                         ) == PackageManager.PERMISSION_GRANTED ||
-                                ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.ACCESS_FINE_LOCATION
-                                ) == PackageManager.PERMISSION_GRANTED
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                            ) == PackageManager.PERMISSION_GRANTED
                     if (hasPermission) {
                         callback(true)
                     } else {
@@ -95,8 +95,8 @@ private fun AirQualityApp() {
                         permissionLauncher.launch(
                             arrayOf(
                                 Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                            ),
                         )
                     }
                 },
@@ -105,22 +105,22 @@ private fun AirQualityApp() {
                 },
                 onOpenSearch = { destination = Destination.Search },
                 onOpenFavorites = { destination = Destination.Favorites },
-                onOpenHistory = { destination = Destination.History }
+                onOpenHistory = { destination = Destination.History },
             )
 
             Destination.Search -> LocationSearchScreen(
                 onBack = { destination = Destination.Dashboard },
-                onLocationSelected = { destination = Destination.Dashboard }
+                onLocationSelected = { destination = Destination.Dashboard },
             )
 
             Destination.Favorites -> FavoritesScreen(
                 onBack = { destination = Destination.Dashboard },
                 onLocationSelected = { destination = Destination.Dashboard },
-                onSearch = { destination = Destination.Search }
+                onSearch = { destination = Destination.Search },
             )
 
             Destination.History -> HistoricalAirQualityScreen(
-                onBack = { destination = Destination.Dashboard }
+                onBack = { destination = Destination.Dashboard },
             )
         }
     }
@@ -128,16 +128,16 @@ private fun AirQualityApp() {
 
 private fun requestCurrentLocation(
     context: Context,
-    callback: (Location?) -> Unit
+    callback: (Location?) -> Unit,
 ) {
     val hasLocationPermission =
         ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
             ) == PackageManager.PERMISSION_GRANTED
     if (!hasLocationPermission) {
         callback(null)
@@ -169,12 +169,12 @@ private fun requestCurrentLocation(
         locationManager.getCurrentLocation(
             provider,
             cancellationSignal,
-            ContextCompat.getMainExecutor(context)
+            ContextCompat.getMainExecutor(context),
         ) { location ->
             timeoutHandler.removeCallbacks(timeout)
-            location?.let{
+            location?.let {
                 getLocationAddress(context, location, callback)
-            }?: callback(null)
+            } ?: callback(null)
         }
         return
     }
@@ -197,30 +197,41 @@ private fun requestCurrentLocation(
         LOCATION_UPDATE_INTERVAL_MS,
         LOCATION_UPDATE_DISTANCE_METERS,
         listener,
-        Looper.getMainLooper()
+        Looper.getMainLooper(),
     )
     timeoutHandler.postDelayed(timeout, LOCATION_REQUEST_TIMEOUT_MS)
 }
 
-private fun getLocationAddress(context:Context, location: android.location.Location, callback: (Location?) -> Unit){
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+private fun getLocationAddress(
+    context: Context,
+    location: android.location.Location,
+    callback: (Location?) -> Unit,
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Geocoder(context).getFromLocation(location.latitude, location.longitude, 1) { addresses ->
             processAddresses(location, addresses, callback)
         }
-    }else{
+    } else {
         @Suppress("DEPRECATION")
-        Geocoder(context).getFromLocation(location.latitude, location.longitude,
-            1).let { addresses ->
+        Geocoder(context).getFromLocation(
+            location.latitude,
+            location.longitude,
+            1,
+        ).let { addresses ->
             processAddresses(location, addresses, callback)
         }
     }
 }
 
-private fun processAddresses(location: android.location.Location, addresses: List<Address>?, callback: (Location?) -> Unit) {
+private fun processAddresses(
+    location: android.location.Location,
+    addresses: List<Address>?,
+    callback: (Location?) -> Unit,
+) {
     val address = addresses?.firstOrNull()?.let { address ->
-        val city = address.locality?: address.adminArea
+        val city = address.locality ?: address.adminArea
         val country = address.countryName
         "$city, $country"
     }
-    callback(Location(location.latitude, location.longitude,address))
+    callback(Location(location.latitude, location.longitude, address))
 }

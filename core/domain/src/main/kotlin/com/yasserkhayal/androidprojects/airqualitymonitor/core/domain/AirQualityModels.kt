@@ -3,7 +3,7 @@ package com.yasserkhayal.androidprojects.airqualitymonitor.core.domain
 data class Location(
     val latitude: Double,
     val longitude: Double,
-    val address: String? = null
+    val address: String? = null,
 )
 
 data class AirQualitySnapshot(
@@ -14,7 +14,7 @@ data class AirQualitySnapshot(
     val pm10: Double?,
     val carbonMonoxide: Double?,
     val nitrogenDioxide: Double?,
-    val ozone: Double?
+    val ozone: Double?,
 ) {
     val category: AqiCategory?
         get() = europeanAqi?.let(AqiCategory::from)
@@ -25,7 +25,8 @@ enum class AqiCategory {
     FAIR,
     MODERATE,
     POOR,
-    VERY_POOR;
+    VERY_POOR,
+    ;
 
     companion object {
         fun from(aqi: Int): AqiCategory = when {

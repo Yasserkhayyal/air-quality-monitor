@@ -9,12 +9,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -25,16 +30,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,7 +58,7 @@ fun DashboardScreen(
     onOpenFavorites: () -> Unit,
     onOpenHistory: () -> Unit,
     uiState: DashboardUiState = DashboardUiState(),
-    onIntent: (DashboardIntent) -> Unit = {}
+    onIntent: (DashboardIntent) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -71,25 +71,29 @@ fun DashboardScreen(
                     IconButton(onClick = onOpenFavorites) {
                         Icon(Icons.Default.FavoriteBorder, contentDescription = stringResource(R.string.content_description_favorites))
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.padding(padding).padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .padding(padding)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
                 Spacer(Modifier.height(4.dp))
                 Text(stringResource(R.string.dashboard_current_location), style = MaterialTheme.typography.titleMedium)
-                Text(uiState.locationAddress?: stringResource(R.string.dashboard_location_selected),
-                    style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    uiState.locationAddress ?: stringResource(R.string.dashboard_location_selected),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
             item {
                 DashboardContent(
                     uiState = uiState,
                     onOpenHistory = onOpenHistory,
-                    onRetry = { onIntent(DashboardIntent.Retry) }
+                    onRetry = { onIntent(DashboardIntent.Retry) },
                 )
             }
         }
@@ -103,7 +107,7 @@ fun DashboardRoute(
     onOpenSearch: () -> Unit,
     onOpenFavorites: () -> Unit,
     onOpenHistory: () -> Unit,
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -115,6 +119,7 @@ fun DashboardRoute(
                     onRequestLocationPermission { granted ->
                         viewModel.onIntent(DashboardIntent.PermissionResult(granted))
                     }
+
                 DashboardEffect.RequestCurrentLocation ->
                     onRequestCurrentLocation { location ->
                         viewModel.onIntent(DashboardIntent.LocationResult(location))
@@ -128,7 +133,7 @@ fun DashboardRoute(
         onOpenFavorites = onOpenFavorites,
         onOpenHistory = onOpenHistory,
         uiState = uiState,
-        onIntent = viewModel::onIntent
+        onIntent = viewModel::onIntent,
     )
 }
 
@@ -139,7 +144,7 @@ private fun DashboardScreenPreview() {
         DashboardScreen(
             onOpenSearch = {},
             onOpenFavorites = {},
-            onOpenHistory = {}
+            onOpenHistory = {},
         )
     }
 }
@@ -148,12 +153,12 @@ private fun DashboardScreenPreview() {
 private fun DashboardContent(
     uiState: DashboardUiState,
     onOpenHistory: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         ) {
             Column(Modifier.padding(20.dp)) {
                 Text(stringResource(R.string.dashboard_aqi), style = MaterialTheme.typography.labelLarge)
@@ -164,24 +169,26 @@ private fun DashboardContent(
                     uiState.snapshot?.europeanAqi?.toString()
                         ?: stringResource(R.string.dashboard_measurement_not_available),
                     style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 Text(
                     uiState.snapshot?.category?.let { category ->
                         stringResource(category.labelRes)
                     } ?: stringResource(
-                        if (uiState.isLoading) R.string.dashboard_data_waiting
-                        else R.string.dashboard_data_unavailable
+                        if (uiState.isLoading) {
+                            R.string.dashboard_data_waiting
+                        } else {
+                            R.string.dashboard_data_unavailable
+                        },
                     ),
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge,
                 )
                 Text(
                     uiState.snapshot?.timestamp
                         ?: stringResource(R.string.dashboard_timestamp_unavailable),
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
-
         }
 
         Text(stringResource(R.string.dashboard_pollutants), style = MaterialTheme.typography.titleMedium)
@@ -189,7 +196,7 @@ private fun DashboardContent(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.dashboard_history_title), style = MaterialTheme.typography.titleMedium)
@@ -208,7 +215,7 @@ private fun DashboardContent(
                         stringResource(R.string.dashboard_use_current_location)
                     } else {
                         stringResource(R.string.dashboard_retry)
-                    }
+                    },
                 )
             }
             AssistChip(onClick = {}, label = { Text(stringResource(R.string.dashboard_search)) })
@@ -224,7 +231,7 @@ private fun DashboardContentPreview() {
         DashboardContent(
             uiState = DashboardUiState(),
             onOpenHistory = {},
-            onRetry = {}
+            onRetry = {},
         )
     }
 }
@@ -236,25 +243,25 @@ private fun PollutantGrid(snapshot: AirQualitySnapshot? = null) {
         "PM10" to snapshot?.pm10,
         "NO2" to snapshot?.nitrogenDioxide,
         "O3" to snapshot?.ozone,
-        "CO" to snapshot?.carbonMonoxide
+        "CO" to snapshot?.carbonMonoxide,
     )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         pollutants.chunked(2).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 row.forEach { (pollutant, value) ->
                     Card(
                         modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(pollutant, style = MaterialTheme.typography.labelLarge)
                             Text(
                                 value?.toString()
                                     ?: stringResource(R.string.dashboard_measurement_not_available),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
@@ -284,28 +291,29 @@ fun HistoricalAirQualityScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.content_description_back)
+                            contentDescription = stringResource(R.string.content_description_back),
                         )
                     }
-                }
+                },
 
             )
-        }
+        },
     ) { padding ->
         Column(
-            modifier = Modifier.padding(padding).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .padding(padding)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(stringResource(R.string.dashboard_location_selected), style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.history_unavailable_title), style = MaterialTheme.typography.headlineSmall)
             Text(
                 stringResource(R.string.history_unavailable_message),
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
             )
             Button(onClick = {}) { Text(stringResource(R.string.history_retry)) }
         }
     }
-
 }
 
 @Preview(showBackground = true)

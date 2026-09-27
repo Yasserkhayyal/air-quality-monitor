@@ -10,6 +10,6 @@ interface OpenMeteoApi {
         @Query("longitude") longitude: Double,
         @Query("current") current: String =
             "european_aqi,pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,ozone",
-        @Query("timezone") timezone: String = "auto"
+        @Query("timezone") timezone: String = "auto",
     ): OpenMeteoResponse
 }

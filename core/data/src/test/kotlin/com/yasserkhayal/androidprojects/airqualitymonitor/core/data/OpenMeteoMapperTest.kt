@@ -15,8 +15,8 @@ class OpenMeteoMapperTest {
                 pm10 = 20.0,
                 carbonMonoxide = 300.0,
                 nitrogenDioxide = 18.0,
-                ozone = 46.0
-            )
+                ozone = 46.0,
+            ),
         )
 
         val location = Location(51.5, -0.1)

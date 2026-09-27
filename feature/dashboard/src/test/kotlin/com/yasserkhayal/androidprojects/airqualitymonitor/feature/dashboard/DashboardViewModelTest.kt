@@ -1,7 +1,7 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard
 
-import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualityRepository
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import io.mockk.coEvery
@@ -48,7 +48,7 @@ class DashboardViewModelTest {
                 pm10 = 12.0,
                 carbonMonoxide = 250.0,
                 nitrogenDioxide = 15.0,
-                ozone = 20.0
+                ozone = 20.0,
             )
             val address = "Cairo, EG"
             val repository = mockk<AirQualityRepository>()

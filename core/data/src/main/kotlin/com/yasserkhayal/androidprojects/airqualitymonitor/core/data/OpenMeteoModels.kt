@@ -3,7 +3,7 @@ package com.yasserkhayal.androidprojects.airqualitymonitor.core.data
 import com.google.gson.annotations.SerializedName
 
 data class OpenMeteoResponse(
-    val current: OpenMeteoCurrent
+    val current: OpenMeteoCurrent,
 )
 
 data class OpenMeteoCurrent(
@@ -13,5 +13,5 @@ data class OpenMeteoCurrent(
     val pm10: Double?,
     @SerializedName("carbon_monoxide") val carbonMonoxide: Double?,
     @SerializedName("nitrogen_dioxide") val nitrogenDioxide: Double?,
-    val ozone: Double?
+    val ozone: Double?,
 )

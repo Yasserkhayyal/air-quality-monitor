@@ -21,8 +21,8 @@ class AirQualityRepositoryImplTest {
                 pm10 = 15.0,
                 carbonMonoxide = 250.0,
                 nitrogenDioxide = 20.0,
-                ozone = 30.0
-            )
+                ozone = 30.0,
+            ),
         )
 
         val repo = AirQualityRepositoryImpl(api)
