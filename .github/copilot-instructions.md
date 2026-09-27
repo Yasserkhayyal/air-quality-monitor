@@ -26,9 +26,8 @@ The current architecture uses:
 - Room
 - Open-Meteo REST API
 - Geocoding service for location search
+- Android Geocoder API for the current location
 - Android location APIs at the platform boundary
-- MockK for Unit Tests, AndroidJunit4 and ComposeTestRule for UI and Compose screen tests
-- Compose Preview Screenshot testing to test visual attributes and layout regression in Composables
 
 Do not add libraries without a concrete benefit. Explain any new dependency
 before introducing it when the change is non-trivial.

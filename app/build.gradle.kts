@@ -52,6 +52,7 @@ dependencies {
     implementation(project(":feature:search"))
     implementation(project(":feature:favorites"))
     implementation(project(":core:data"))
+    implementation(project(":core:domain"))
 
     // Architecture-required dependency set
     implementation(libs.hilt.android)
@@ -62,6 +63,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     ksp(libs.hilt.compiler)
     ksp(libs.room.compiler)
