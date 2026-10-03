@@ -264,13 +264,27 @@ Use the following testing tools and frameworks consistently:
 - **Android/UI tests:** **AndroidJUnit4** with **ComposeTestRule** for
   instrumented Android and Compose UI testing.
 - **Compose screenshot tests:** Use **Compose Preview Screenshot Testing**
-  for visual regression testing of Composable rendering, including layout
-  and visual attributes.
+  for visual regression testing of meaningful Composable UI states, including
+  layout and visual attributes.
 
 Do not introduce alternative mocking or UI-testing frameworks unless there
 is a concrete technical reason and the change is explicitly justified.
 
 Test behavior and architectural boundaries rather than implementation details.
+
+Distinguish behavioral UI testing from visual regression testing:
+
+- Use **ComposeTestRule** for UI behavior, semantics, interaction, and
+  important user flows.
+- Use **Compose Preview Screenshot Testing** for visual presentation and
+  regression coverage of meaningful UI states.
+- Screenshot tests complement behavioral UI tests; they do not replace them.
+
+When a meaningful user-visible UI state is introduced or changed, add or
+update the corresponding screenshot regression test unless the state is not
+suitable for deterministic screenshot testing.
+
+When meaningful behavior changes, update or add regression tests.
 
 Prioritize meaningful tests for:
 
@@ -280,12 +294,12 @@ Prioritize meaningful tests for:
 - cache freshness and fallback behavior
 - ViewModel state transitions
 - important Compose user flows
+- meaningful Compose UI states
 - permission-related presentation state and side effects
+- visual presentation of important user-facing states
 
 Do not rely on live external APIs for application logic tests.
 Use fakes, fixtures, or controlled test doubles where appropriate.
-
-When meaningful behavior changes, update or add regression tests.
 
 ## 13. Code Quality
 

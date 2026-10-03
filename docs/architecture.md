@@ -373,7 +373,8 @@ or database-specific representations.
 
 ## 14. Testing
 
-Testing should focus on behavior and architectural boundaries.
+Testing should focus on behavior, visual presentation, and architectural
+boundaries.
 
 ### Unit Tests
 
@@ -384,10 +385,34 @@ Testing should focus on behavior and architectural boundaries.
 
 ### UI Tests
 
-Important user-facing flows should be covered with Compose UI tests.
+Important user-facing behavior and interaction flows should be covered with
+Compose UI tests using `ComposeTestRule`.
 
-Tests should not require the real network when testing application
-logic.
+UI tests should verify behavior, semantics, interactions, and important user
+flows rather than visual appearance alone.
+
+### Screenshot Tests
+
+Meaningful user-visible Compose UI states should be covered with **Compose
+Preview Screenshot Testing**.
+
+Screenshot tests should be used to verify visual presentation, including:
+
+- layout
+- spacing
+- typography
+- colors
+- icons
+- status indicators
+- user-facing messaging
+
+Screenshot tests complement behavioral Compose UI tests and should not replace
+them.
+
+When a feature introduces or changes a meaningful user-visible state, the
+corresponding screenshot test should be added or updated.
+
+Tests should not require the real network when testing application logic.
 
 ---
 

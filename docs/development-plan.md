@@ -466,7 +466,12 @@ Fresh cached data is distinguishable from stale cached data.
 
 The dashboard clearly communicates cached/stale information to the user.
 
+Meaningful Dashboard UI states from Phase 2 and Phase 3 have appropriate
+Compose Preview Screenshot Testing coverage.
+
 ## Testing Tasks
+
+### Data-layer tests
 
 Add focused tests for:
 
@@ -477,6 +482,42 @@ Add focused tests for:
 - offline with cache
 - offline without cache
 - cache persistence and retrieval
+
+### Compose UI tests
+
+Add or update Compose UI tests for important user-facing behavior and
+interactions introduced or affected by Phase 3.
+
+### Compose screenshot tests
+
+Use **Compose Preview Screenshot Testing** to provide visual regression
+coverage for:
+
+- meaningful Dashboard UI states introduced in Phase 2 that currently lack
+  screenshot coverage
+- meaningful Dashboard UI states introduced or changed by Phase 3
+
+At minimum, ensure screenshot coverage exists for the relevant states from
+Phase 2 and Phase 3, including:
+
+- Phase 2 user-visible states that are currently implemented and lack
+  screenshot coverage
+- fresh cached data
+- stale cached data
+- remote failure with usable cache
+- remote failure without usable cache
+- offline with usable cache
+- offline without usable cache
+
+Inspect the existing implementation before deciding the exact Phase 2 states
+to cover. Do not invent states that are not part of the implemented product
+behavior.
+
+Reuse or update existing screenshot tests where appropriate rather than
+creating duplicate coverage.
+
+Screenshot tests should validate visual presentation such as layout,
+typography, colors, icons, status indicators, and user-facing messaging.
 
 ---
 
