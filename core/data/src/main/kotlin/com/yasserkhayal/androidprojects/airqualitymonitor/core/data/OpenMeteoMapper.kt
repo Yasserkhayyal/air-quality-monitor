@@ -5,7 +5,7 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 
 internal fun OpenMeteoResponse.toDomain(location: Location): AirQualitySnapshot = AirQualitySnapshot(
     location = location,
-    timestamp = current.time,
+    timestamp = current.time.replace('T', ' '),
     europeanAqi = current.europeanAqi,
     pm2_5 = current.pm2_5,
     pm10 = current.pm10,

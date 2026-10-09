@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.yasserkhayal.androidprojects.airqualitymonitor"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.yasserkhayal.androidprojects.airqualitymonitor"
@@ -52,6 +50,7 @@ dependencies {
     implementation(project(":feature:search"))
     implementation(project(":feature:favorites"))
     implementation(project(":core:data"))
+    implementation(project(":core:design-system"))
     implementation(project(":core:domain"))
 
     // Architecture-required dependency set
@@ -60,13 +59,10 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 
     ksp(libs.hilt.compiler)
-    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

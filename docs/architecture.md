@@ -125,17 +125,26 @@ user-facing features from shared domain contracts and data infrastructure.
     - Data-layer mappers
     - Cache and freshness coordination
 
+- `:core:design-system`
+    - Shared Material 3 theme, color schemes, typography, and design tokens
+    - Reusable UI components only when there is a concrete cross-feature use
+
 ### Module Dependency Rules
 
-Feature modules depend on `:core:domain` and must not depend on
-`:core:data` or on other feature modules.
+Feature modules depend on `:core:domain` and may depend on
+`:core:design-system` for shared presentation styling and components. They must
+not depend on `:core:data` or on other feature modules.
 
 `:core:data` depends on `:core:domain` and provides the concrete
 implementations of domain repository interfaces.
 
+`:core:design-system` provides shared Material 3 styling and reusable
+presentation components. It must not depend on feature, domain, or data
+modules.
+
 `:app` is the composition root. It depends directly on the feature
-modules and on `:core:data` to assemble the application and configure
-dependency injection.
+modules, `:core:data`, and `:core:design-system` to assemble the application,
+apply the shared theme, and configure dependency injection.
 
 `:app` should not contain business logic or bypass domain abstractions
 simply because it has access to the data module.

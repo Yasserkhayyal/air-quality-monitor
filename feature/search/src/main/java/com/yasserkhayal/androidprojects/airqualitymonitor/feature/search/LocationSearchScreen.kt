@@ -24,8 +24,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Devices.PHONE
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewDynamicColors
+import androidx.compose.ui.tooling.preview.PreviewFontScale
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,17 +85,6 @@ fun LocationSearchScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun LocationSearchScreenPreview() {
-    MaterialTheme {
-        LocationSearchScreen(
-            onBack = {},
-            onLocationSelected = {},
-        )
-    }
-}
-
 @Composable
 private fun LocationResultItem(visible: Boolean, onClick: () -> Unit) {
     if (!visible) return
@@ -102,10 +99,21 @@ private fun LocationResultItem(visible: Boolean, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
+@PreviewLightDark
+@Composable
+private fun LocationSearchScreenPreview() {
+    AirQualityMonitorTheme {
+        LocationSearchScreen(
+            onBack = {},
+            onLocationSelected = {},
+        )
+    }
+}
+
+@PreviewLightDark
 @Composable
 private fun LocationResultItemPreview() {
-    MaterialTheme {
+    AirQualityMonitorTheme {
         LocationResultItem(visible = true, onClick = {})
     }
 }

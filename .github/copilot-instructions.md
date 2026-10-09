@@ -74,13 +74,18 @@ Follow the multi-module structure and dependency rules defined in
 `docs/architecture.md` and `docs/development-plan.md`.
 
 - `:app` is the application composition root.
-- `:app` may depend on feature modules and `:core:data` for application
-  assembly and dependency injection configuration.
+- `:app` may depend on feature modules, `:core:data`, and `:core:design-system`
+  for application assembly, dependency injection configuration, and shared
+  theming.
 - Feature modules depend on `:core:domain`.
+- Feature modules may depend on `:core:design-system` for shared presentation
+  theme and UI components.
 - Feature modules must not depend directly on `:core:data`.
 - Feature modules must not depend on other feature modules.
 - `:core:data` depends on `:core:domain` and implements its repository
   interfaces.
+- `:core:design-system` owns shared Material 3 theme, tokens, and genuinely
+  reusable UI components; it must not depend on features or data modules.
 - Do not use transitive Gradle dependencies to bypass intentional module
   boundaries.
 - Do not introduce additional modules without a concrete architectural

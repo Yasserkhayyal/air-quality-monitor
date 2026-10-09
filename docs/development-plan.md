@@ -118,6 +118,7 @@ application still builds and launches before implementing product behavior.
 - `:app`
 - `:core:domain`
 - `:core:data`
+- `:core:design-system`
 - `:feature:dashboard`
 - `:feature:search`
 - `:feature:favorites`
@@ -126,9 +127,11 @@ application still builds and launches before implementing product behavior.
 
 ```text
 Feature modules → :core:domain
+Feature modules → :core:design-system
 :core:data     → :core:domain
 :app           → feature modules
 :app           → :core:data
+:app           → :core:design-system
 ```
 
 The important architectural relationship remains:
@@ -347,6 +350,7 @@ dependency makes cache support necessary earlier.
 
 - `:core:domain`
 - `:core:data`
+- `:core:design-system`
 - `:feature:dashboard`
 - `:app`
 
@@ -422,6 +426,7 @@ layer.
 
 - `:core:domain`
 - `:core:data`
+- `:core:design-system`
 - `:feature:dashboard`
 
 ## Data Modeling Rules
@@ -535,6 +540,7 @@ permission.
 
 - `:core:domain`
 - `:core:data`
+- `:core:design-system`
 - `:feature:search`
 - `:feature:dashboard`
 - `:app`
@@ -611,6 +617,7 @@ Favorites require no authentication.
 
 - `:core:domain`
 - `:core:data`
+- `:core:design-system`
 - `:feature:favorites`
 - `:app`
 
@@ -745,6 +752,7 @@ loading, error, empty, permission, and retry behaviors.
 - `:app`
 - relevant feature modules
 - `:core:domain`
+- `:core:design-system`
 - `:core:data` where needed for platform/data coordination
 
 ## Permission Flow

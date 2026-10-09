@@ -4,9 +4,14 @@
     <string name="dashboard_favorites">Favorites</string>
     <string name="dashboard_current_location">Current location</string>
     <string name="dashboard_location_selected">Location selected</string>
+    <string name="dashboard_location_permission_denied">Location permission denied</string>
+    <string name="dashboard_location_unavailable">Location unavailable</string>
     <string name="dashboard_aqi">AQI</string>
     <string name="dashboard_data_waiting">Waiting for air-quality data</string>
     <string name="dashboard_data_unavailable">Air-quality data unavailable</string>
+    <string name="dashboard_refresh_failed">Could not refresh air-quality data.</string>
+    <string name="dashboard_data_may_be_outdated">This data may be outdated.</string>
+    <string name="dashboard_offline_no_cache">You are offline and no saved measurement is available.</string>
     <string name="dashboard_retry">Retry</string>
     <string name="dashboard_timestamp_unavailable">Data timestamp unavailable</string>
     <string name="dashboard_pollutants">Pollutants</string>

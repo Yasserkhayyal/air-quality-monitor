@@ -28,12 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.DashboardRoute
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.HistoricalAirQualityScreen
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.favorites.FavoritesScreen
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.search.LocationSearchScreen
-import com.yasserkhayal.androidprojects.airqualitymonitor.ui.theme.AirQualityMonitorTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 private const val LOCATION_REQUEST_TIMEOUT_MS = 10_000L
@@ -158,9 +158,9 @@ private fun requestCurrentLocation(
         return
     }
 
+    val timeoutHandler = Handler(Looper.getMainLooper())
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         val cancellationSignal = CancellationSignal()
-        val timeoutHandler = Handler(Looper.getMainLooper())
         val timeout = Runnable {
             cancellationSignal.cancel()
             callback(null)
@@ -179,7 +179,6 @@ private fun requestCurrentLocation(
         return
     }
 
-    val timeoutHandler = Handler(Looper.getMainLooper())
     lateinit var timeout: Runnable
     val listener = object : LocationListener {
         override fun onLocationChanged(location: android.location.Location) {

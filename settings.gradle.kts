@@ -26,6 +26,7 @@ rootProject.name = "AirQualityMonitor"
 include(":app")
 include(":core:domain")
 include(":core:data")
+include(":core:design-system")
 include(":feature:dashboard")
 include(":feature:search")
 include(":feature:favorites")

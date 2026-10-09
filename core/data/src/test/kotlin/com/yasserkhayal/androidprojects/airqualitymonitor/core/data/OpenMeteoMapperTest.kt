@@ -24,7 +24,7 @@ class OpenMeteoMapperTest {
         val snapshot = response.toDomain(location)
 
         assertEquals(location, snapshot.location)
-        assertEquals("2026-09-25T16:00", snapshot.timestamp)
+        assertEquals("2026-09-25 16:00", snapshot.timestamp)
         assertEquals(42, snapshot.europeanAqi)
         assertEquals(12.5, snapshot.pm2_5 ?: 0.0, 0.0)
         assertEquals(20.0, snapshot.pm10 ?: 0.0, 0.0)
