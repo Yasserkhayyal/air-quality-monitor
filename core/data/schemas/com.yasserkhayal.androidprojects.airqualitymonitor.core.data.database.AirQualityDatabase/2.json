@@ -1,0 +1,125 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "3a01314e19b5903b0f32672e2aa7de84",
+    "entities": [
+      {
+        "tableName": "air_quality_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`locationKey` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `address` TEXT, `timestamp` TEXT NOT NULL, `europeanAqi` INTEGER, `pm2_5` REAL, `pm10` REAL, `carbonMonoxide` REAL, `nitrogenDioxide` REAL, `ozone` REAL, `retrievedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`locationKey`))",
+        "fields": [
+          {
+            "fieldPath": "locationKey",
+            "columnName": "locationKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "europeanAqi",
+            "columnName": "europeanAqi",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pm2_5",
+            "columnName": "pm2_5",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "pm10",
+            "columnName": "pm10",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "carbonMonoxide",
+            "columnName": "carbonMonoxide",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "nitrogenDioxide",
+            "columnName": "nitrogenDioxide",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "ozone",
+            "columnName": "ozone",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "retrievedAtEpochMillis",
+            "columnName": "retrievedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "locationKey"
+          ]
+        }
+      },
+      {
+        "tableName": "selected_location",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `address` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3a01314e19b5903b0f32672e2aa7de84')"
+    ]
+  }
+}

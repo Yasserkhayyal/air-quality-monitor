@@ -1,5 +1,8 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor.core.data
 
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.toCacheEntity
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.toCacheKey
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.toDomain
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import org.junit.Assert.assertEquals

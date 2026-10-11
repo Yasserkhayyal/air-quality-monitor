@@ -1,6 +1,15 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor.core.data
 
 import android.database.sqlite.SQLiteException
+import android.util.Log
+import com.google.gson.JsonParseException
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.AirQualityDao
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.AirQualityRepositoryImpl
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoApi
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoCurrent
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoResponse
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.toCacheEntity
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.toCacheKey
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataFreshness
@@ -8,7 +17,9 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataOrigin
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -44,6 +55,21 @@ class AirQualityRepositoryImplTest {
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is DataError.OfflineNoCache)
+    }
+
+    /** Malformed API payloads are distinct from network connectivity failures. */
+    @Test
+    fun `maps malformed remote response to unexpected response data error`() = runTest {
+        val api = mockk<OpenMeteoApi>()
+        val dao = mockk<AirQualityDao>()
+        coEvery { api.getCurrentAirQuality(any(), any(), any(), any()) } throws
+            JsonParseException("malformed response")
+        coEvery { dao.findByLocationKey(any()) } returns null
+
+        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
+
+        assertTrue(result.exceptionOrNull() is DataError.UnexpectedResponse)
+        coVerify(exactly = 1) { dao.findByLocationKey(any()) }
     }
 
     @Test
@@ -88,6 +114,8 @@ class AirQualityRepositoryImplTest {
     fun `returns remote data when cache persistence fails`() = runTest {
         val api = mockk<OpenMeteoApi>()
         val dao = mockk<AirQualityDao>()
+        mockkStatic(Log::class)
+        every { Log.e(any(), any(), any()) } returns 0
         coEvery { api.getCurrentAirQuality(any(), any(), any(), any()) } returns sampleResponse()
         coEvery { dao.upsert(any()) } throws SQLiteException("disk error")
 

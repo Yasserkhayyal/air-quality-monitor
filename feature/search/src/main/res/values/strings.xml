@@ -1,9 +1,20 @@
 <resources>
     <string name="search_title">Search location</string>
     <string name="search_field_label">City or location</string>
-    <string name="search_progress">Searching locations…</string>
-    <string name="search_hint">Search for a city or place to view its air quality.</string>
-    <string name="search_result_title">Select searched location</string>
-    <string name="search_result_subtitle">Coordinates will be provided by geocoding.</string>
+    <string name="search_progress">Searching locations</string>
+    <string name="search_saving_location">Saving selected location</string>
+    <string name="search_hint">Enter at least two characters to search for a city or place.</string>
+    <string name="search_empty">No matching locations found.</string>
+    <string name="search_error_network">Couldn’t connect to location search. Check your connection and try again.</string>
+    <string name="search_error_server">Location search is temporarily unavailable. Please try again later.</string>
+    <string name="search_error_rate_limited">Location search is receiving too many requests. Wait a moment and try again.</string>
+    <string name="search_error_request_rejected">Location search couldn’t process this request. Please try again.</string>
+    <string name="search_error_configuration">Location search is not configured correctly. Please try again later.</string>
+    <string name="search_error_unexpected">Location search returned an unexpected response. Please try again later.</string>
+    <string name="search_error_offline_no_cache">No network connection is available for location search.</string>
+    <string name="search_error_local">Couldn’t save this location on your device. Try selecting it again.</string>
+    <string name="search_retry">Retry</string>
+    <string name="search_unknown_location">Unknown location</string>
+    <string name="search_coordinates">%1$.4f, %2$.4f</string>
     <string name="content_description_back">Go back</string>
 </resources>

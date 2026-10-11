@@ -230,6 +230,13 @@ Responsible for:
 
 - searching for locations from user-provided text
 
+### SelectedLocationRepository
+
+Responsible for reading and persisting the single active location. Selecting
+a search result or using current location replaces the previous selection, so
+the most recent successful selection is restored on later launches without
+requesting location permission.
+
 ### FavoritesRepository
 
 Responsible for:
@@ -267,6 +274,7 @@ HTTP-specific representations.
 Room is used for:
 
 - cached air-quality measurements
+- the active location selected through search or current-location retrieval
 - favorite locations
 - local state required by the product
 

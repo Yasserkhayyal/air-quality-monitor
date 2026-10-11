@@ -5,7 +5,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.android.tools.screenshot.PreviewTest
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
+import java.io.IOException
 
 @PreviewTest
 @PreviewLightDark
@@ -24,6 +26,18 @@ fun DashboardLocationPermissionDeniedScreenshot() {
 @PreviewTest
 @PreviewLightDark
 @Composable
+fun DashboardLocationRestoreFailedScreenshot() {
+    DashboardScreenshotContent(
+        DashboardUiState(
+            isLoading = true,
+            locationRestoreFailed = true,
+        ),
+    )
+}
+
+@PreviewTest
+@PreviewLightDark
+@Composable
 fun DashboardLocationUnavailableScreenshot() {
     DashboardScreenshotContent(DashboardUiState(error = DashboardError.LocationUnavailable))
 }
@@ -32,7 +46,51 @@ fun DashboardLocationUnavailableScreenshot() {
 @PreviewLightDark
 @Composable
 fun DashboardUnavailableScreenshot() {
-    DashboardScreenshotContent(DashboardUiState(error = DashboardError.DataUnavailable))
+    DashboardScreenshotContent(
+        DashboardUiState(
+            error = DashboardError.DataUnavailable,
+            dataError = DataError.GenericError(IllegalStateException("unexpected failure")),
+        ),
+    )
+}
+
+/** Captures localized messaging for a remote air-quality service outage. */
+@PreviewTest
+@PreviewLightDark
+@Composable
+fun DashboardServerUnavailableScreenshot() {
+    DashboardScreenshotContent(
+        DashboardUiState(
+            error = DashboardError.DataUnavailable,
+            dataError = DataError.Server(503, IOException("service unavailable")),
+        ),
+    )
+}
+
+/** Captures user-facing feedback for service configuration failures. */
+@PreviewTest
+@PreviewLightDark
+@Composable
+fun DashboardConfigurationErrorScreenshot() {
+    DashboardScreenshotContent(
+        DashboardUiState(
+            error = DashboardError.DataUnavailable,
+            dataError = DataError.Configuration(IllegalStateException("configuration")),
+        ),
+    )
+}
+
+/** Captures user-facing feedback when the service rate limits requests. */
+@PreviewTest
+@PreviewLightDark
+@Composable
+fun DashboardRateLimitedErrorScreenshot() {
+    DashboardScreenshotContent(
+        DashboardUiState(
+            error = DashboardError.DataUnavailable,
+            dataError = DataError.RateLimited(IllegalStateException("rate limited")),
+        ),
+    )
 }
 
 @PreviewTest
@@ -50,12 +108,26 @@ fun DashboardRemoteSuccessScreenshot() {
 @PreviewTest
 @PreviewLightDark
 @Composable
+fun DashboardLocationNotSavedScreenshot() {
+    DashboardScreenshotContent(
+        DashboardUiState(
+            snapshot = sampleSnapshot(),
+            locationAddress = "Cairo, Egypt",
+            locationPersistenceFailed = true,
+        ),
+    )
+}
+
+@PreviewTest
+@PreviewLightDark
+@Composable
 fun DashboardFreshCachedFallbackScreenshot() {
     DashboardScreenshotContent(
         DashboardUiState(
             snapshot = sampleSnapshot(),
             locationAddress = "Cairo, Egypt",
             refreshFailed = true,
+            refreshError = DataError.Network(IOException("offline")),
         ),
     )
 }
@@ -70,6 +142,7 @@ fun DashboardStaleCachedFallbackScreenshot() {
             locationAddress = "Cairo, Egypt",
             isStale = true,
             refreshFailed = true,
+            refreshError = DataError.Network(IOException("offline")),
         ),
     )
 }
@@ -82,6 +155,7 @@ fun DashboardOfflineWithoutCacheScreenshot() {
         DashboardUiState(
             refreshFailed = true,
             error = DashboardError.OfflineNoCache,
+            dataError = DataError.OfflineNoCache(IOException("offline")),
         ),
     )
 }

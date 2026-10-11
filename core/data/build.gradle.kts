@@ -4,13 +4,26 @@ plugins {
     alias(libs.plugins.google.ksp)
 }
 
+val distanceMatrixApiKey =
+    providers
+        .gradleProperty("DISTANCEMATRIX_API_KEY")
+        .orElse("")
+        .get()
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+
 android {
     namespace = "com.yasserkhayal.androidprojects.airqualitymonitor.core.data"
     compileSdk = 37
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         minSdk = 24
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "DISTANCE_MATRIX_API_KEY", "\"$distanceMatrixApiKey\"")
     }
 }
 

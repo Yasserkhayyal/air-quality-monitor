@@ -33,12 +33,12 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.DashboardRoute
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.HistoricalAirQualityScreen
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.favorites.FavoritesScreen
-import com.yasserkhayal.androidprojects.airqualitymonitor.feature.search.LocationSearchScreen
+import com.yasserkhayal.androidprojects.airqualitymonitor.feature.search.LocationSearchRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 private const val LOCATION_REQUEST_TIMEOUT_MS = 10_000L
 private const val LOCATION_UPDATE_INTERVAL_MS = 1_000L
-private const val LOCATION_UPDATE_DISTANCE_METERS = 10f
+private const val LOCATION_UPDATE_DISTANCE_METERS = 0f
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -63,6 +63,7 @@ private enum class Destination {
 @Composable
 private fun AirQualityApp() {
     var destination by rememberSaveable { mutableStateOf(Destination.Dashboard) }
+    var pendingSelectedLocation by remember { mutableStateOf<Location?>(null) }
     var permissionCallback by remember { mutableStateOf<((Boolean) -> Unit)?>(null) }
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -78,6 +79,8 @@ private fun AirQualityApp() {
     Surface(modifier = Modifier.fillMaxSize()) {
         when (destination) {
             Destination.Dashboard -> DashboardRoute(
+                initialLocation = pendingSelectedLocation,
+                onInitialLocationConsumed = { pendingSelectedLocation = null },
                 onRequestLocationPermission = { callback ->
                     val hasPermission =
                         ContextCompat.checkSelfPermission(
@@ -108,9 +111,12 @@ private fun AirQualityApp() {
                 onOpenHistory = { destination = Destination.History },
             )
 
-            Destination.Search -> LocationSearchScreen(
+            Destination.Search -> LocationSearchRoute(
                 onBack = { destination = Destination.Dashboard },
-                onLocationSelected = { destination = Destination.Dashboard },
+                onLocationSelected = { location ->
+                    pendingSelectedLocation = location
+                    destination = Destination.Dashboard
+                },
             )
 
             Destination.Favorites -> FavoritesScreen(
@@ -149,12 +155,6 @@ private fun requestCurrentLocation(
         .firstOrNull(locationManager::isProviderEnabled)
     if (provider == null) {
         callback(null)
-        return
-    }
-
-    val lastKnown = locationManager.getLastKnownLocation(provider)
-    if (lastKnown != null) {
-        getLocationAddress(context, lastKnown, callback)
         return
     }
 

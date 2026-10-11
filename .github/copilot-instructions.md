@@ -320,6 +320,8 @@ Do not perform unrelated cleanup or refactoring while implementing a phase.
 
 Preserve existing conventions unless there is a concrete reason to change them.
 
+Always add JavaDoc/KDoc for every new method and for existing method and classes describing its function
+
 ## 14. Working Process
 
 For non-trivial changes, follow:

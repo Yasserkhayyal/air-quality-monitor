@@ -1,5 +1,8 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,12 +14,14 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class DashboardScreenTest {
@@ -49,6 +54,151 @@ class DashboardScreenTest {
             .performClick()
 
         assertEquals(1, retryCount)
+    }
+
+    @Test
+    fun showsWarningWhenSelectedLocationCouldNotBeSaved() {
+        composeRule.setContent {
+            AirQualityMonitorTheme {
+                DashboardScreen(
+                    onOpenSearch = {},
+                    onOpenFavorites = {},
+                    onOpenHistory = {},
+                    uiState = DashboardUiState(
+                        snapshot = sampleSnapshot(),
+                        locationPersistenceFailed = true,
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            "This location could not be saved and will not be restored after an app restart.",
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText("42").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsDatabaseWarningWhenSavedLocationCannotBeRestored() {
+        composeRule.setContent {
+            AirQualityMonitorTheme {
+                DashboardScreen(
+                    onOpenSearch = {},
+                    onOpenFavorites = {},
+                    onOpenHistory = {},
+                    uiState = DashboardUiState(
+                        isLoading = true,
+                        locationRestoreFailed = true,
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            "We couldn’t access your saved location because of a database problem. The app will try your current location.",
+        ).assertIsDisplayed()
+    }
+
+    /** Server failures have service-specific copy rather than connectivity guidance. */
+    @Test
+    fun showsServerFailureInsteadOfBlamingConnectivity() {
+        composeRule.setContent {
+            AirQualityMonitorTheme {
+                DashboardScreen(
+                    onOpenSearch = {},
+                    onOpenFavorites = {},
+                    onOpenHistory = {},
+                    uiState = DashboardUiState(
+                        error = DashboardError.DataUnavailable,
+                        dataError = DataError.Server(503, IOException("service unavailable")),
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            "The air-quality service is temporarily unavailable. Please try again later.",
+        ).assertIsDisplayed()
+    }
+
+    /** A cache remains visible while the user receives a network-specific refresh message. */
+    @Test
+    fun showsConnectivityFailureForCachedDataRefresh() {
+        composeRule.setContent {
+            AirQualityMonitorTheme {
+                DashboardScreen(
+                    onOpenSearch = {},
+                    onOpenFavorites = {},
+                    onOpenHistory = {},
+                    uiState = DashboardUiState(
+                        snapshot = sampleSnapshot(),
+                        refreshFailed = true,
+                        refreshError = DataError.Network(IOException("offline")),
+                    ),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            "Couldn’t connect to the air-quality service. Check your connection and try again.",
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText("42").assertIsDisplayed()
+    }
+
+    /** Each typed fetch error selects user-facing service guidance instead of a fallback message. */
+    @Test
+    fun showsSpecificMessageForEachRemainingDashboardFailureType() {
+        val failures = listOf(
+            DataError.Server(429, IOException("rate limited")) to
+                "The air-quality service is receiving too many requests. Try again later.",
+            DataError.Server(400, IOException("bad request")) to
+                "The air-quality service couldn’t process this request. Please try again.",
+            DataError.Configuration(IllegalStateException("configuration")) to
+                "The air-quality service is not configured correctly. Please try again later.",
+            DataError.RateLimited(IllegalStateException("rate limited")) to
+                "The air-quality service is receiving too many requests. Try again later.",
+            DataError.ServiceUnavailable(IllegalStateException("unavailable")) to
+                "The air-quality service is temporarily unavailable. Please try again later.",
+            DataError.UnexpectedResponse(IllegalStateException("unexpected")) to
+                "The air-quality service returned an unexpected response. Please try again later.",
+            DataError.GenericError(IllegalStateException("unexpected")) to
+                "The air-quality service returned an unexpected response. Please try again later.",
+            DataError.OfflineNoCache(IllegalStateException("offline")) to
+                "You are offline and no saved measurement is available.",
+            DataError.Local(IllegalStateException("local")) to
+                "Couldn’t access saved air-quality data on this device. Try again.",
+        )
+        var uiState by mutableStateOf(
+            DashboardUiState(
+                error = DashboardError.DataUnavailable,
+                dataError = failures.first().first,
+            ),
+        )
+
+        composeRule.setContent {
+            AirQualityMonitorTheme {
+                DashboardScreen(
+                    onOpenSearch = {},
+                    onOpenFavorites = {},
+                    onOpenHistory = {},
+                    uiState = uiState,
+                )
+            }
+        }
+
+        failures.forEach { (failure, expectedMessage) ->
+            composeRule.runOnIdle {
+                uiState = DashboardUiState(
+                    error = if (failure is DataError.OfflineNoCache) {
+                        DashboardError.OfflineNoCache
+                    } else {
+                        DashboardError.DataUnavailable
+                    },
+                    dataError = failure,
+                )
+            }
+            composeRule.onNodeWithText(expectedMessage).assertIsDisplayed()
+        }
     }
 
     @Test

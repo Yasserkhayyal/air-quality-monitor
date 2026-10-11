@@ -50,6 +50,10 @@ If the user denies location permission, the application must remain
 fully usable through location/city search.
 
 The user may explicitly choose to use their current location later.
+The most recently active location, whether selected through search or
+current-location retrieval, is restored on later launches without requesting
+location permission. A restored current-location selection may be outdated;
+the user can explicitly refresh it by choosing to use the current location.
 
 ---
 

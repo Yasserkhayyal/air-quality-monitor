@@ -7,6 +7,7 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQuality
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataFreshness
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.SelectedLocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,10 @@ data class DashboardUiState(
     val locationAddress: String? = null,
     val isStale: Boolean = false,
     val refreshFailed: Boolean = false,
+    val dataError: DataError? = null,
+    val refreshError: DataError? = null,
+    val locationPersistenceFailed: Boolean = false,
+    val locationRestoreFailed: Boolean = false,
     val error: DashboardError? = null,
 )
 
@@ -35,20 +40,23 @@ enum class DashboardError {
 
 sealed interface DashboardIntent {
     data object Started : DashboardIntent
-    data class OnPermissionResult(val granted: Boolean) : DashboardIntent
+    data class OnPermissionResult(val granted: Boolean, val requestId: Long) : DashboardIntent
     data class OnLocationResult(val location: Location?) : DashboardIntent
+    data class OnCurrentLocationResult(val location: Location?, val requestId: Long) : DashboardIntent
 
     data object Retry : DashboardIntent
+    data object UseCurrentLocation : DashboardIntent
 }
 
 sealed interface DashboardEffect {
-    data object RequestLocationPermission : DashboardEffect
-    data object RequestCurrentLocation : DashboardEffect
+    data class RequestLocationPermission(val requestId: Long) : DashboardEffect
+    data class RequestCurrentLocation(val requestId: Long) : DashboardEffect
 }
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val repository: AirQualityRepository,
+    private val selectedLocationRepository: SelectedLocationRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -56,29 +64,54 @@ class DashboardViewModel @Inject constructor(
     private val _effects = Channel<DashboardEffect>(Channel.BUFFERED)
     val effects: Flow<DashboardEffect> = _effects.receiveAsFlow()
     internal var lastLocation: Location? = null
+    private var hasStarted = false
+    private var nextLocationRequestId = 0L
+    private var activeLocationRequestId: Long? = null
 
     fun onIntent(intent: DashboardIntent) {
         when (intent) {
-            DashboardIntent.Started -> requestPermission()
+            DashboardIntent.Started -> {
+                if (!hasStarted) {
+                    hasStarted = true
+                    restoreSelectedLocation()
+                }
+            }
 
-            DashboardIntent.Retry -> lastLocation?.let(::loadAirQuality) ?: requestPermission()
+            DashboardIntent.Retry -> when {
+                lastLocation != null && _uiState.value.locationPersistenceFailed ->
+                    persistCurrentLocation(requireNotNull(lastLocation))
+
+                lastLocation != null -> loadAirQuality(requireNotNull(lastLocation))
+
+                _uiState.value.error == DashboardError.DataUnavailable -> restoreSelectedLocation()
+
+                else -> requestPermission()
+            }
+
+            DashboardIntent.UseCurrentLocation -> requestPermission()
 
             is DashboardIntent.OnPermissionResult -> {
-                if (intent.granted) {
-                    emitEffect(DashboardEffect.RequestCurrentLocation)
-                } else {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            snapshot = null,
-                            error = DashboardError.PermissionDenied,
-                        )
+                if (activeLocationRequestId == intent.requestId) {
+                    if (intent.granted) {
+                        emitEffect(DashboardEffect.RequestCurrentLocation(intent.requestId))
+                    } else {
+                        activeLocationRequestId = null
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                snapshot = null,
+                                error = DashboardError.PermissionDenied,
+                            )
+                        }
                     }
                 }
             }
 
             is DashboardIntent.OnLocationResult -> {
+                activeLocationRequestId = null
+                hasStarted = true
                 lastLocation = intent.location
+                _uiState.update { it.copy(locationPersistenceFailed = false) }
                 intent.location?.let(::loadAirQuality)
                     ?: _uiState.update {
                         it.copy(
@@ -89,10 +122,52 @@ class DashboardViewModel @Inject constructor(
                         )
                     }
             }
+
+            is DashboardIntent.OnCurrentLocationResult -> {
+                if (activeLocationRequestId == intent.requestId) {
+                    activeLocationRequestId = null
+                    hasStarted = true
+                    intent.location?.let(::persistCurrentLocation)
+                        ?: run {
+                            lastLocation = null
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    snapshot = null,
+                                    locationAddress = null,
+                                    error = DashboardError.LocationUnavailable,
+                                )
+                            }
+                        }
+                }
+            }
+        }
+    }
+
+    private fun restoreSelectedLocation() {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            selectedLocationRepository.getSelectedLocation()
+                .onSuccess { location ->
+                    if (location == null) {
+                        requestPermission()
+                    } else {
+                        lastLocation = location
+                        loadAirQuality(location)
+                    }
+                }
+                .onFailure {
+                    _uiState.update {
+                        it.copy(locationRestoreFailed = true)
+                    }
+                    requestPermission()
+                }
         }
     }
 
     private fun requestPermission() {
+        val requestId = ++nextLocationRequestId
+        activeLocationRequestId = requestId
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -101,7 +176,30 @@ class DashboardViewModel @Inject constructor(
                 refreshFailed = false,
             )
         }
-        emitEffect(DashboardEffect.RequestLocationPermission)
+        emitEffect(DashboardEffect.RequestLocationPermission(requestId))
+    }
+
+    private fun persistCurrentLocation(location: Location) {
+        lastLocation = location
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                isStale = false,
+                refreshFailed = false,
+                locationPersistenceFailed = false,
+                error = null,
+            )
+        }
+        viewModelScope.launch {
+            val saveResult = selectedLocationRepository.saveSelectedLocation(location)
+            _uiState.update {
+                it.copy(
+                    locationPersistenceFailed = saveResult.isFailure,
+                    locationRestoreFailed = saveResult.isFailure && it.locationRestoreFailed,
+                )
+            }
+            loadAirQuality(location)
+        }
     }
 
     private fun loadAirQuality(location: Location) {
@@ -114,12 +212,17 @@ class DashboardViewModel @Inject constructor(
                         locationAddress = location.address ?: result.snapshot.location.address,
                         isStale = result.freshness == DataFreshness.Stale,
                         refreshFailed = result.refreshError != null,
+                        refreshError = result.refreshError,
+                        locationPersistenceFailed = _uiState.value.locationPersistenceFailed,
                     )
                 }
                 .onFailure { error ->
+                    val dataError = error.asDataError()
                     _uiState.value = DashboardUiState(
                         isLoading = false,
-                        error = if (error is DataError.OfflineNoCache || error is DataError.Local) {
+                        locationPersistenceFailed = _uiState.value.locationPersistenceFailed,
+                        dataError = dataError,
+                        error = if (dataError is DataError.OfflineNoCache) {
                             DashboardError.OfflineNoCache
                         } else {
                             DashboardError.DataUnavailable
@@ -128,6 +231,9 @@ class DashboardViewModel @Inject constructor(
                 }
         }
     }
+
+    /** Preserves known repository errors and wraps unexpected failures for typed UI handling. */
+    private fun Throwable.asDataError(): DataError = this as? DataError ?: DataError.GenericError(this)
 
     private fun emitEffect(effect: DashboardEffect) {
         viewModelScope.launch { _effects.send(effect) }

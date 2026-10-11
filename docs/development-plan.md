@@ -528,7 +528,7 @@ typography, colors, icons, status indicators, and user-facing messaging.
 
 # 7. Phase 4 — Location Search
 
-**Status:** Not Started
+**Status:** Completed
 
 ## Goal
 
@@ -572,6 +572,35 @@ permission.
     layer.
 17. Preserve the ability to use search when location permission is denied.
 
+## Agreed Search and Persistence Behavior
+
+- Use DistanceMatrix.ai Geocoding API as the initial location-search provider.
+- Search after a minimum two-character query and a 600 ms debounce; cancel
+  superseded requests.
+- Display up to five valid matches returned by the provider, without
+  manufacturing additional results.
+- Show request progress in the search field; do not show result skeletons.
+- Display the formatted address and coordinates for result disambiguation.
+- Persist one active location selection in Room. Selecting either a search
+  result or current location replaces it, so the most recent user action wins.
+- Restore the active selection on launch without requesting location
+  permission. A restored current-location selection may be outdated; the user
+  can refresh it through the explicit Dashboard current-location action.
+- Read `DISTANCEMATRIX_API_KEY` from the developer's Gradle user-home
+  `gradle.properties`; never put the key in a tracked project file. The value
+  is still extractable from the built Android application and this is only a
+  temporary source-control safeguard.
+
+For local builds, add this property to `~/.gradle/gradle.properties`:
+
+```properties
+DISTANCEMATRIX_API_KEY=<your-key>
+```
+
+The provider documentation uses both `result` and `results` for its result
+array; Data accepts either spelling. Confirm the provider's live response
+against a configured key before finalizing service integration.
+
 ## Definition of Done
 
 The user can:
@@ -588,7 +617,9 @@ Open the dashboard for that location
 Retrieve current air quality
 ```
 
-Location permission is not required for the search flow.
+After restart, restore the most recently selected location, whether searched
+or current, without requesting location permission. Location permission is
+not required for the search flow.
 
 ## Testing Tasks
 
@@ -600,6 +631,12 @@ Test:
 - DTO mapping
 - result selection
 - selected-location dashboard loading
+- minimum query length, debounce, and cancellation of superseded requests
+- selected-location persistence and database migration
+- latest-selection precedence across searched and current locations
+- ComposeTestRule query/result interactions
+- screenshot states for search loading, results, empty results, and failures
+- screenshot coverage for the Dashboard location-persistence warning
 
 ---
 

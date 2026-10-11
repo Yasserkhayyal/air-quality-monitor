@@ -44,6 +44,7 @@ import com.eygraber.compose.placeholder.shimmer
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AqiCategory
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 
 const val SEARCH_TOP_BAR_ICON_BUTTON = "search_top_bar_icon_button"
@@ -121,6 +122,7 @@ fun DashboardScreen(
                     onOpenHistory = onOpenHistory,
                     onOpenSearch = onOpenSearch,
                     onRetry = { onIntent(DashboardIntent.Retry) },
+                    onUseCurrentLocation = { onIntent(DashboardIntent.UseCurrentLocation) },
                 )
             }
         }
@@ -129,6 +131,8 @@ fun DashboardScreen(
 
 @Composable
 fun DashboardRoute(
+    initialLocation: Location?,
+    onInitialLocationConsumed: () -> Unit,
     onRequestLocationPermission: ((Boolean) -> Unit) -> Unit,
     onRequestCurrentLocation: ((Location?) -> Unit) -> Unit,
     onOpenSearch: () -> Unit,
@@ -139,19 +143,31 @@ fun DashboardRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {
-        viewModel.onIntent(DashboardIntent.Started)
         viewModel.effects.collect { effect ->
             when (effect) {
-                DashboardEffect.RequestLocationPermission ->
+                is DashboardEffect.RequestLocationPermission ->
                     onRequestLocationPermission { granted ->
-                        viewModel.onIntent(DashboardIntent.OnPermissionResult(granted))
+                        viewModel.onIntent(
+                            DashboardIntent.OnPermissionResult(granted, effect.requestId),
+                        )
                     }
 
-                DashboardEffect.RequestCurrentLocation ->
+                is DashboardEffect.RequestCurrentLocation ->
                     onRequestCurrentLocation { location ->
-                        viewModel.onIntent(DashboardIntent.OnLocationResult(location))
+                        viewModel.onIntent(
+                            DashboardIntent.OnCurrentLocationResult(location, effect.requestId),
+                        )
                     }
             }
+        }
+    }
+
+    LaunchedEffect(initialLocation) {
+        if (initialLocation == null) {
+            viewModel.onIntent(DashboardIntent.Started)
+        } else {
+            viewModel.onIntent(DashboardIntent.OnLocationResult(initialLocation))
+            onInitialLocationConsumed()
         }
     }
 
@@ -170,10 +186,38 @@ private fun DashboardContent(
     onOpenHistory: () -> Unit,
     onOpenSearch: () -> Unit,
     onRetry: () -> Unit,
+    onUseCurrentLocation: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        if (uiState.locationRestoreFailed) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+            ) {
+                Text(
+                    stringResource(R.string.dashboard_location_restore_failed),
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        if (uiState.locationPersistenceFailed) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                Text(
+                    stringResource(R.string.dashboard_location_not_saved),
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
         if (uiState.refreshFailed) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -185,8 +229,13 @@ private fun DashboardContent(
                         .padding(start = 16.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val refreshError = uiState.refreshError
                     Text(
-                        stringResource(R.string.dashboard_refresh_failed),
+                        if (refreshError == null) {
+                            stringResource(R.string.dashboard_refresh_failed)
+                        } else {
+                            dashboardErrorMessage(refreshError)
+                        },
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -198,12 +247,29 @@ private fun DashboardContent(
         }
 
         if (uiState.error == DashboardError.OfflineNoCache) {
+            val dataError = uiState.dataError
             Text(
-                stringResource(R.string.dashboard_offline_no_cache),
+                if (dataError == null) {
+                    stringResource(R.string.dashboard_offline_no_cache)
+                } else {
+                    dashboardErrorMessage(dataError)
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
             )
         } else {
+            if (uiState.error == DashboardError.DataUnavailable) {
+                val dataError = uiState.dataError
+                Text(
+                    if (dataError == null) {
+                        stringResource(R.string.dashboard_data_unavailable)
+                    } else {
+                        dashboardErrorMessage(dataError)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -294,7 +360,9 @@ private fun DashboardContent(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onRetry) {
+            Button(
+                onClick = if (uiState.error == null) onUseCurrentLocation else onRetry,
+            ) {
                 Text(
                     if (uiState.error == null) {
                         stringResource(R.string.dashboard_use_current_location)
@@ -311,6 +379,32 @@ private fun DashboardContent(
         }
         Spacer(Modifier.height(16.dp))
     }
+}
+
+/** Returns localized user-facing copy for a typed data-layer failure. */
+@Composable
+private fun dashboardErrorMessage(error: DataError): String = when (error) {
+    is DataError.Network -> stringResource(R.string.dashboard_error_network)
+
+    is DataError.Server -> when {
+        error.code == 429 -> stringResource(R.string.dashboard_error_rate_limited)
+        error.code in 500..599 -> stringResource(R.string.dashboard_error_server)
+        else -> stringResource(R.string.dashboard_error_request_rejected)
+    }
+
+    is DataError.Configuration -> stringResource(R.string.dashboard_error_configuration)
+
+    is DataError.RateLimited -> stringResource(R.string.dashboard_error_rate_limited)
+
+    is DataError.ServiceUnavailable -> stringResource(R.string.dashboard_error_server)
+
+    is DataError.UnexpectedResponse,
+    is DataError.GenericError,
+    -> stringResource(R.string.dashboard_error_unexpected)
+
+    is DataError.OfflineNoCache -> stringResource(R.string.dashboard_offline_no_cache)
+
+    is DataError.Local -> stringResource(R.string.dashboard_error_local)
 }
 
 @Composable

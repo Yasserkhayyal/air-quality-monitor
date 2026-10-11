@@ -1,5 +1,8 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor.core.data
 
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoCurrent
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoResponse
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.toDomain
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import org.junit.Assert.assertEquals
 import org.junit.Test

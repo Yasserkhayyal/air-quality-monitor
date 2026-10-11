@@ -1,5 +1,6 @@
 package com.yasserkhayal.androidprojects.airqualitymonitor.core.data
 
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.freshnessAt
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataFreshness
 import org.junit.Assert.assertEquals
 import org.junit.Test

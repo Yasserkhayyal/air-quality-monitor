@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.invoke
-
 plugins {
     id("com.android.library")
     alias(libs.plugins.kotlin.compose)
