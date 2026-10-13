@@ -8,16 +8,19 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQuality
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataFreshness
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataOrigin
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.FavoritesRepository
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.SelectedLocationRepository
 import io.mockk.called
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,11 +38,13 @@ class DashboardViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val repository = mockk<AirQualityRepository>()
     private val selectedLocationRepository = mockk<SelectedLocationRepository>()
+    private val favoritesRepository = mockk<FavoritesRepository>()
 
     @Before
     fun setup() {
         Dispatchers.setMain(dispatcher)
         coEvery { selectedLocationRepository.getSelectedLocation() } returns Result.success(null)
+        every { favoritesRepository.observeFavorites() } returns flowOf(emptyList())
     }
 
     @After
@@ -49,7 +54,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `requests location permission when no location is saved`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
         viewModel.onIntent(DashboardIntent.Started)
         turbineScope {
             val uiStateTurbine = viewModel.uiState.testIn(backgroundScope)
@@ -70,7 +75,7 @@ class DashboardViewModelTest {
     fun `requests current location and exposes database issue when restoring saved location fails`() = runTest {
         coEvery { selectedLocationRepository.getSelectedLocation() } returns
             Result.failure(DataError.Local(RuntimeException("database unavailable")))
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.Started)
 
@@ -99,7 +104,7 @@ class DashboardViewModelTest {
         coEvery { repository.getCurrentAirQuality(location) } returns Result.success(
             AirQualityResult(snapshot, DataFreshness.Fresh, DataOrigin.Remote),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.Started)
 
@@ -126,7 +131,7 @@ class DashboardViewModelTest {
         coEvery { repository.getCurrentAirQuality(Location(1.0, 2.0, address)) } returns Result.success(
             AirQualityResult(snapshot, DataFreshness.Fresh, DataOrigin.Remote),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.OnLocationResult(Location(1.0, 2.0, address)))
 
@@ -155,7 +160,7 @@ class DashboardViewModelTest {
         coEvery { repository.getCurrentAirQuality(Location(1.0, 2.0, address)) } returns Result.success(
             AirQualityResult(snapshot, DataFreshness.Fresh, DataOrigin.Remote),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.lastLocation = Location(1.0, 2.0, address)
 
@@ -172,7 +177,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `request permission on retry if location is null`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.lastLocation = null
 
@@ -197,7 +202,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `request current location on location permission granted`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.UseCurrentLocation)
         val permissionRequest = viewModel.effects.first() as DashboardEffect.RequestLocationPermission
@@ -217,7 +222,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `explicit current location action requests permission`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.UseCurrentLocation)
 
@@ -248,7 +253,7 @@ class DashboardViewModelTest {
             calls += "load"
             Result.success(AirQualityResult(snapshot, DataFreshness.Fresh, DataOrigin.Remote))
         }
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         val requestId = requestCurrentLocation(viewModel)
         viewModel.onIntent(DashboardIntent.OnCurrentLocationResult(location, requestId))
@@ -280,7 +285,7 @@ class DashboardViewModelTest {
         coEvery { repository.getCurrentAirQuality(location) } returns Result.success(
             AirQualityResult(snapshot, DataFreshness.Fresh, DataOrigin.Remote),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         val requestId = requestCurrentLocation(viewModel)
         viewModel.onIntent(DashboardIntent.OnCurrentLocationResult(location, requestId))
@@ -297,7 +302,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `location permission denied state on location permission denied`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
         viewModel.onIntent(DashboardIntent.UseCurrentLocation)
         val permissionRequest = viewModel.effects.first() as DashboardEffect.RequestLocationPermission
 
@@ -325,7 +330,7 @@ class DashboardViewModelTest {
         coEvery { repository.getCurrentAirQuality(searchedLocation) } returns Result.failure(
             DataError.OfflineNoCache(RuntimeException("offline")),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
         val requestId = requestCurrentLocation(viewModel)
 
         viewModel.onIntent(DashboardIntent.OnLocationResult(searchedLocation))
@@ -338,7 +343,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `null snapshot on null location`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.OnLocationResult(null))
 
@@ -355,7 +360,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `handles remote fetch failure and no cache`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         coEvery {
             repository.getCurrentAirQuality(Location(3.0, 4.0))
@@ -374,7 +379,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `handles remote fetch failure and cache retrieval failure`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         coEvery {
             repository.getCurrentAirQuality(Location(3.0, 4.0))
@@ -393,7 +398,7 @@ class DashboardViewModelTest {
 
     @Test
     fun `handles remote fetch failure and server failure`() = runTest {
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         coEvery {
             repository.getCurrentAirQuality(Location(3.0, 4.0))
@@ -431,7 +436,7 @@ class DashboardViewModelTest {
                 refreshError = DataError.Network(RuntimeException("offline")),
             ),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.OnLocationResult(location))
 
@@ -462,12 +467,45 @@ class DashboardViewModelTest {
         coEvery { repository.getCurrentAirQuality(location) } returns Result.success(
             AirQualityResult(snapshot, DataFreshness.Fresh, DataOrigin.Remote),
         )
-        val viewModel = DashboardViewModel(repository, selectedLocationRepository)
+        val viewModel = createViewModel()
 
         viewModel.onIntent(DashboardIntent.OnLocationResult(location))
         viewModel.onIntent(DashboardIntent.Retry)
 
         coVerify(exactly = 2) { repository.getCurrentAirQuality(location) }
+    }
+
+    /** Adds the active Dashboard location and immediately reflects the saved state. */
+    @Test
+    fun `adds active location to favorites`() = runTest {
+        val location = Location(30.0444, 31.2357, "Cairo, Egypt")
+        coEvery { repository.getCurrentAirQuality(location) } returns Result.failure(
+            DataError.OfflineNoCache(IllegalStateException("offline")),
+        )
+        coEvery { favoritesRepository.addFavorite(location) } returns Result.success(Unit)
+        val viewModel = createViewModel()
+
+        viewModel.onIntent(DashboardIntent.OnLocationResult(location))
+        viewModel.onIntent(DashboardIntent.AddActiveLocationToFavorites)
+
+        assertTrue(viewModel.uiState.value.isLocationFavorite)
+        assertFalse(viewModel.uiState.value.favoriteOperationFailed)
+        coVerify(exactly = 1) { favoritesRepository.addFavorite(location) }
+    }
+
+    /** Favorite observation marks a newly active matching coordinate as saved. */
+    @Test
+    fun `observes whether active location is already favorited`() = runTest {
+        val location = Location(30.0444, 31.2357, "Cairo, Egypt")
+        every { favoritesRepository.observeFavorites() } returns flowOf(listOf(location.copy(address = "Cairo")))
+        coEvery { repository.getCurrentAirQuality(location) } returns Result.failure(
+            DataError.OfflineNoCache(IllegalStateException("offline")),
+        )
+        val viewModel = createViewModel()
+
+        viewModel.onIntent(DashboardIntent.OnLocationResult(location))
+
+        assertTrue(viewModel.uiState.value.isLocationFavorite)
     }
 
     private suspend fun requestCurrentLocation(viewModel: DashboardViewModel): Long {
@@ -481,4 +519,10 @@ class DashboardViewModelTest {
         )
         return (viewModel.effects.first() as DashboardEffect.RequestCurrentLocation).requestId
     }
+
+    private fun createViewModel() = DashboardViewModel(
+        repository,
+        selectedLocationRepository,
+        favoritesRepository,
+    )
 }

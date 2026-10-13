@@ -642,7 +642,7 @@ Test:
 
 # 8. Phase 5 — Favorites
 
-**Status:** Not Started
+**Status:** Completed
 
 ## Goal
 
@@ -655,29 +655,37 @@ Favorites require no authentication.
 - `:core:domain`
 - `:core:data`
 - `:core:design-system`
+- `:feature:dashboard`
 - `:feature:favorites`
 - `:app`
 
 ## Tasks
 
 1. Define `FavoriteLocation` if it is not already established by the
-   existing domain model.
-2. Define `FavoriteLocationRepository`.
-3. Add the required Room entity.
-4. Add the required DAO.
-5. Implement favorite persistence operations.
-6. Expose favorites as an observable local collection where appropriate.
+   existing domain model. Reuse `Location` unless favorite-specific data
+   proves necessary.
+2. Define `FavoritesRepository` for observing, adding/updating, and removing
+   favorites.
+3. Identify favorites by exact latitude/longitude. Adding matching
+   coordinates replaces address/details without creating a duplicate or
+   changing insertion position. New favorites append at the end (oldest
+   first); removing and adding again places it at the end.
+4. Add the Room entity, DAO, mappings, and repository implementation.
+5. Upgrade the Room database from version 2 to version 3 with a migration and
+   preserve exported schema history.
+6. Expose favorites as an observable local collection in persisted order.
 7. Configure Hilt binding.
-8. Define favorites intents/events.
-9. Define `FavoritesUiState`.
-10. Implement `FavoritesViewModel`.
-11. Implement `FavoritesScreen`.
-12. Add favorite/remove interactions.
-13. Allow selection of a favorite location.
-14. Route the selected location through application-level navigation rather
-    than feature-to-feature module dependencies.
-15. Integrate favorite state into relevant dashboard interactions where
-    required by the product.
+8. Define favorites intents/events, immutable `FavoritesUiState`, and
+   `FavoritesViewModel`.
+9. Implement `FavoritesScreen` for loading, empty, populated, and failure
+   states, with select and remove interactions.
+10. Add Dashboard action and state for saving the currently active location to
+    favorites and reflecting whether it is already saved.
+11. Persist a selected favorite as the active location before routing to
+    Dashboard. Route through `:app`; do not add feature-to-feature
+    dependencies.
+12. Add the required repository, migration/persistence, ViewModel,
+    ComposeTestRule, and screenshot regression tests.
 
 ## Definition of Done
 
@@ -697,6 +705,9 @@ Remove favorite
 
 Favorites persist across application restarts.
 
+Favorites are coordinate-keyed, duplicate adds replace details without
+changing order, and new favorites appear oldest-first.
+
 ## Testing Tasks
 
 Test:
@@ -707,6 +718,11 @@ Test:
 - persistence across recreation/restart where practical
 - selecting a favorite
 - ViewModel state transitions
+- coordinate-conflict replacement and stable insertion order
+- v2-to-v3 migration and preservation of existing cache/selected-location data
+- Dashboard favorite status and add action
+- selecting a favorite persists it as the active location before Dashboard
+  navigation
 
 ---
 

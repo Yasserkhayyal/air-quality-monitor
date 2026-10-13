@@ -105,6 +105,21 @@ fun DashboardRemoteSuccessScreenshot() {
     )
 }
 
+/** Captures the Dashboard action after its active location is saved as a favorite. */
+@PreviewTest
+@PreviewLightDark
+@Composable
+fun DashboardLocationFavoritedScreenshot() {
+    DashboardScreenshotContent(
+        DashboardUiState(
+            snapshot = sampleSnapshot(),
+            activeLocation = sampleSnapshot().location,
+            locationAddress = "Cairo, Egypt",
+            isLocationFavorite = true,
+        ),
+    )
+}
+
 @PreviewTest
 @PreviewLightDark
 @Composable

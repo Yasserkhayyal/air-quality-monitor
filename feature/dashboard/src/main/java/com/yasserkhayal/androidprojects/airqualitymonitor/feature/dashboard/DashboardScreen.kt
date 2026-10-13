@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +51,7 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 
 const val SEARCH_TOP_BAR_ICON_BUTTON = "search_top_bar_icon_button"
 const val FAVORITES_TOP_BAR_ICON_BUTTON = "favorites_top_bar_icon_button"
+const val ADD_FAVORITE_TOP_BAR_ICON_BUTTON = "add_favorite_top_bar_icon_button"
 const val SEARCH_CHIP = "search_chip"
 private val AqiCategory.labelRes: Int
     get() = when (this) {
@@ -91,6 +94,33 @@ fun DashboardScreen(
                             contentDescription = stringResource(R.string.content_description_favorites),
                         )
                     }
+                    IconButton(
+                        onClick = { onIntent(DashboardIntent.AddActiveLocationToFavorites) },
+                        enabled = uiState.activeLocation != null &&
+                            !uiState.isLocationFavorite &&
+                            !uiState.isSavingFavorite &&
+                            !uiState.favoritesUnavailable,
+                        modifier = Modifier.testTag(ADD_FAVORITE_TOP_BAR_ICON_BUTTON),
+                    ) {
+                        if (uiState.isSavingFavorite) {
+                            CircularProgressIndicator()
+                        } else {
+                            Icon(
+                                imageVector = if (uiState.isLocationFavorite) {
+                                    Icons.Default.Favorite
+                                } else {
+                                    Icons.Default.FavoriteBorder
+                                },
+                                contentDescription = stringResource(
+                                    if (uiState.isLocationFavorite) {
+                                        R.string.dashboard_location_is_favorite
+                                    } else {
+                                        R.string.dashboard_add_location_to_favorites
+                                    },
+                                ),
+                            )
+                        }
+                    }
                 },
             )
         },
@@ -110,9 +140,22 @@ fun DashboardScreen(
                 Text(
                     when (uiState.error) {
                         DashboardError.LocationUnavailable -> stringResource(R.string.dashboard_location_unavailable)
+
                         DashboardError.PermissionDenied -> stringResource(R.string.dashboard_location_permission_denied)
-                        else -> uiState.locationAddress ?: stringResource(R.string.dashboard_location_selected)
+
+                        else ->
+                            uiState.locationAddress
+                                ?: stringResource(R.string.dashboard_location_selected)
                     },
+                    modifier = Modifier.placeholder(
+                        visible = uiState.isLoading,
+                        color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.background),
+                        highlight = PlaceholderHighlight.shimmer(
+                            highlightColor = MaterialTheme.colorScheme.background.copy(
+                                alpha = 0.35f,
+                            ),
+                        ),
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -218,6 +261,20 @@ private fun DashboardContent(
             }
         }
 
+        if (uiState.favoritesUnavailable) {
+            Text(
+                stringResource(R.string.dashboard_favorites_unavailable),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else if (uiState.favoriteOperationFailed) {
+            Text(
+                stringResource(R.string.dashboard_favorite_add_failed),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
         if (uiState.refreshFailed) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -277,13 +334,6 @@ private fun DashboardContent(
                 Column(Modifier.padding(20.dp)) {
                     Text(
                         stringResource(R.string.dashboard_aqi),
-                        modifier = Modifier.placeholder(
-                            visible = uiState.isLoading,
-                            color = PlaceholderDefaults.color(
-                                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                            ),
-                            highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
-                        ),
                         style = MaterialTheme.typography.labelLarge,
                     )
                     Text(
@@ -292,7 +342,11 @@ private fun DashboardContent(
                         modifier = Modifier.placeholder(
                             visible = uiState.isLoading,
                             color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.primaryContainer),
-                            highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+                            highlight = PlaceholderHighlight.shimmer(
+                                highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                                    alpha = 0.35f,
+                                ),
+                            ),
                         ),
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
@@ -304,7 +358,11 @@ private fun DashboardContent(
                         modifier = Modifier.placeholder(
                             visible = uiState.isLoading,
                             color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.primaryContainer),
-                            highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+                            highlight = PlaceholderHighlight.shimmer(
+                                highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                                    alpha = 0.35f,
+                                ),
+                            ),
                         ),
                         style = MaterialTheme.typography.titleLarge,
                     )
@@ -314,7 +372,11 @@ private fun DashboardContent(
                         modifier = Modifier.placeholder(
                             visible = uiState.isLoading,
                             color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.primaryContainer),
-                            highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+                            highlight = PlaceholderHighlight.shimmer(
+                                highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                                    alpha = 0.35f,
+                                ),
+                            ),
                         ),
                         style = MaterialTheme.typography.labelMedium,
                     )
@@ -329,11 +391,6 @@ private fun DashboardContent(
 
             Text(
                 stringResource(R.string.dashboard_pollutants),
-                modifier = Modifier.placeholder(
-                    visible = uiState.isLoading,
-                    color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.background),
-                    highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.background.copy(alpha = 0.35f)),
-                ),
                 style = MaterialTheme.typography.titleMedium,
             )
             PollutantGrid(uiState.isLoading, uiState.snapshot)
@@ -432,13 +489,6 @@ private fun PollutantGrid(isLoading: Boolean = false, snapshot: AirQualitySnapsh
                         Column(Modifier.padding(12.dp)) {
                             Text(
                                 pollutant,
-                                modifier = Modifier.placeholder(
-                                    visible = isLoading,
-                                    color = PlaceholderDefaults.color(
-                                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    ),
-                                    highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-                                ),
                                 style = MaterialTheme.typography.labelLarge,
                             )
                             Text(
@@ -449,7 +499,11 @@ private fun PollutantGrid(isLoading: Boolean = false, snapshot: AirQualitySnapsh
                                     color = PlaceholderDefaults.color(
                                         backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                                     ),
-                                    highlight = PlaceholderHighlight.shimmer(highlightColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+                                    highlight = PlaceholderHighlight.shimmer(
+                                        highlightColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                            alpha = 0.35f,
+                                        ),
+                                    ),
                                 ),
                                 style = MaterialTheme.typography.bodyMedium,
                             )

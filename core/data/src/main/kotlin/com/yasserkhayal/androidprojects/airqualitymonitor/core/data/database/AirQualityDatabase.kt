@@ -6,23 +6,30 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.AirQualityCacheEntity
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.AirQualityDao
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.favorites.FavoriteLocationDao
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.favorites.FavoriteLocationEntity
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.selectedLocation.SelectedLocationDao
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.selectedLocation.SelectedLocationEntity
 
+/** Stores measurements, the active location, and favorite locations locally. */
 @Database(
-    entities = [AirQualityCacheEntity::class, SelectedLocationEntity::class],
-    version = 2,
+    entities = [AirQualityCacheEntity::class, SelectedLocationEntity::class, FavoriteLocationEntity::class],
+    version = 3,
     exportSchema = true,
 )
 internal abstract class AirQualityDatabase : RoomDatabase() {
     abstract fun airQualityDao(): AirQualityDao
 
     abstract fun selectedLocationDao(): SelectedLocationDao
+
+    /** Exposes persisted favorites to the data layer. */
+    abstract fun favoriteLocationDao(): FavoriteLocationDao
 }
 
 internal val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL(
+    /** Adds selected-location persistence while preserving cached measurements. */
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `selected_location` (
                 `id` INTEGER NOT NULL,
@@ -30,6 +37,23 @@ internal val MIGRATION_1_2 = object : Migration(1, 2) {
                 `longitude` REAL NOT NULL,
                 `address` TEXT,
                 PRIMARY KEY(`id`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
+internal val MIGRATION_2_3 = object : Migration(2, 3) {
+    /** Adds the coordinate-keyed favorite locations table. */
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `favorite_locations` (
+                `latitude` REAL NOT NULL,
+                `longitude` REAL NOT NULL,
+                `address` TEXT,
+                `sortOrder` INTEGER NOT NULL,
+                PRIMARY KEY(`latitude`, `longitude`)
             )
             """.trimIndent(),
         )

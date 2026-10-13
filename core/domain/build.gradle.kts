@@ -13,5 +13,5 @@ android {
 }
 
 dependencies {
-    // Domain-only; keep dependencies minimal in Phase 0
+    implementation(libs.kotlinx.coroutines.core)
 }

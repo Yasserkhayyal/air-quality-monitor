@@ -6,6 +6,7 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQuality
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataFreshness
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.FavoritesRepository
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.SelectedLocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,6 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -21,6 +23,7 @@ import javax.inject.Inject
 data class DashboardUiState(
     val isLoading: Boolean = false,
     val snapshot: AirQualitySnapshot? = null,
+    val activeLocation: Location? = null,
     val locationAddress: String? = null,
     val isStale: Boolean = false,
     val refreshFailed: Boolean = false,
@@ -28,6 +31,10 @@ data class DashboardUiState(
     val refreshError: DataError? = null,
     val locationPersistenceFailed: Boolean = false,
     val locationRestoreFailed: Boolean = false,
+    val isLocationFavorite: Boolean = false,
+    val isSavingFavorite: Boolean = false,
+    val favoriteOperationFailed: Boolean = false,
+    val favoritesUnavailable: Boolean = false,
     val error: DashboardError? = null,
 )
 
@@ -46,6 +53,7 @@ sealed interface DashboardIntent {
 
     data object Retry : DashboardIntent
     data object UseCurrentLocation : DashboardIntent
+    data object AddActiveLocationToFavorites : DashboardIntent
 }
 
 sealed interface DashboardEffect {
@@ -57,6 +65,7 @@ sealed interface DashboardEffect {
 class DashboardViewModel @Inject constructor(
     private val repository: AirQualityRepository,
     private val selectedLocationRepository: SelectedLocationRepository,
+    private val favoritesRepository: FavoritesRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
@@ -64,9 +73,14 @@ class DashboardViewModel @Inject constructor(
     private val _effects = Channel<DashboardEffect>(Channel.BUFFERED)
     val effects: Flow<DashboardEffect> = _effects.receiveAsFlow()
     internal var lastLocation: Location? = null
+    private var favoriteLocations: List<Location> = emptyList()
     private var hasStarted = false
     private var nextLocationRequestId = 0L
     private var activeLocationRequestId: Long? = null
+
+    init {
+        observeFavorites()
+    }
 
     fun onIntent(intent: DashboardIntent) {
         when (intent) {
@@ -89,6 +103,8 @@ class DashboardViewModel @Inject constructor(
             }
 
             DashboardIntent.UseCurrentLocation -> requestPermission()
+
+            DashboardIntent.AddActiveLocationToFavorites -> addActiveLocationToFavorites()
 
             is DashboardIntent.OnPermissionResult -> {
                 if (activeLocationRequestId == intent.requestId) {
@@ -118,6 +134,7 @@ class DashboardViewModel @Inject constructor(
                             isLoading = false,
                             snapshot = null,
                             locationAddress = lastLocation?.address,
+                            activeLocation = null,
                             error = DashboardError.LocationUnavailable,
                         )
                     }
@@ -134,6 +151,7 @@ class DashboardViewModel @Inject constructor(
                                 it.copy(
                                     isLoading = false,
                                     snapshot = null,
+                                    activeLocation = null,
                                     locationAddress = null,
                                     error = DashboardError.LocationUnavailable,
                                 )
@@ -203,24 +221,38 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun loadAirQuality(location: Location) {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                error = null,
+                activeLocation = location,
+                isLocationFavorite = isFavorite(location),
+                favoriteOperationFailed = false,
+            )
+        }
         viewModelScope.launch {
             repository.getCurrentAirQuality(location)
                 .onSuccess { result ->
                     _uiState.value = DashboardUiState(
                         snapshot = result.snapshot,
+                        activeLocation = location,
                         locationAddress = location.address ?: result.snapshot.location.address,
                         isStale = result.freshness == DataFreshness.Stale,
                         refreshFailed = result.refreshError != null,
                         refreshError = result.refreshError,
                         locationPersistenceFailed = _uiState.value.locationPersistenceFailed,
+                        isLocationFavorite = isFavorite(location),
+                        favoritesUnavailable = _uiState.value.favoritesUnavailable,
                     )
                 }
                 .onFailure { error ->
                     val dataError = error.asDataError()
                     _uiState.value = DashboardUiState(
                         isLoading = false,
+                        activeLocation = location,
                         locationPersistenceFailed = _uiState.value.locationPersistenceFailed,
+                        isLocationFavorite = isFavorite(location),
+                        favoritesUnavailable = _uiState.value.favoritesUnavailable,
                         dataError = dataError,
                         error = if (dataError is DataError.OfflineNoCache) {
                             DashboardError.OfflineNoCache
@@ -231,6 +263,67 @@ class DashboardViewModel @Inject constructor(
                 }
         }
     }
+
+    /** Tracks persisted favorites to keep active-location membership current. */
+    private fun observeFavorites() {
+        viewModelScope.launch {
+            favoritesRepository.observeFavorites()
+                .catch {
+                    _uiState.update { state ->
+                        state.copy(favoritesUnavailable = true)
+                    }
+                }
+                .collect { favorites ->
+                    favoriteLocations = favorites
+                    _uiState.update { state ->
+                        state.copy(
+                            isLocationFavorite = state.activeLocation?.let(::isFavorite) ?: false,
+                            favoritesUnavailable = false,
+                        )
+                    }
+                }
+        }
+    }
+
+    /** Adds the current active location without changing its existing favorite order. */
+    private fun addActiveLocationToFavorites() {
+        val location = _uiState.value.activeLocation ?: return
+        if (_uiState.value.isLocationFavorite || _uiState.value.isSavingFavorite) return
+        _uiState.update {
+            it.copy(isSavingFavorite = true, favoriteOperationFailed = false)
+        }
+        viewModelScope.launch {
+            favoritesRepository.addFavorite(location)
+                .onSuccess {
+                    favoriteLocations = favoriteLocations
+                        .filterNot { favorite -> hasSameCoordinates(favorite, location) } + location
+                    _uiState.update { state ->
+                        if (state.activeLocation?.let { hasSameCoordinates(it, location) } == true) {
+                            state.copy(
+                                isLocationFavorite = true,
+                                isSavingFavorite = false,
+                            )
+                        } else {
+                            state
+                        }
+                    }
+                }
+                .onFailure {
+                    _uiState.update { state ->
+                        state.copy(
+                            isSavingFavorite = false,
+                            favoriteOperationFailed = true,
+                        )
+                    }
+                }
+        }
+    }
+
+    /** Checks favorite membership by latitude and longitude. */
+    private fun isFavorite(location: Location): Boolean = favoriteLocations.any { favorite -> hasSameCoordinates(favorite, location) }
+
+    /** Compares locations using the persisted favorite coordinate identity. */
+    private fun hasSameCoordinates(first: Location, second: Location): Boolean = first.latitude == second.latitude && first.longitude == second.longitude
 
     /** Preserves known repository errors and wraps unexpected failures for typed UI handling. */
     private fun Throwable.asDataError(): DataError = this as? DataError ?: DataError.GenericError(this)

@@ -32,7 +32,7 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.them
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.DashboardRoute
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.HistoricalAirQualityScreen
-import com.yasserkhayal.androidprojects.airqualitymonitor.feature.favorites.FavoritesScreen
+import com.yasserkhayal.androidprojects.airqualitymonitor.feature.favorites.FavoritesRoute
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.search.LocationSearchRoute
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -119,9 +119,12 @@ private fun AirQualityApp() {
                 },
             )
 
-            Destination.Favorites -> FavoritesScreen(
+            Destination.Favorites -> FavoritesRoute(
                 onBack = { destination = Destination.Dashboard },
-                onLocationSelected = { destination = Destination.Dashboard },
+                onLocationSelected = { location ->
+                    pendingSelectedLocation = location
+                    destination = Destination.Dashboard
+                },
                 onSearch = { destination = Destination.Search },
             )
 

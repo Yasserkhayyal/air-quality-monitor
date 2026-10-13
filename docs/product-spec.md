@@ -116,8 +116,16 @@ Users can:
 - View favorite locations
 - Open a favorite location
 - Remove a favorite location
+- Add the currently active Dashboard location to favorites
 
 Favorites do not require authentication and are stored locally.
+
+Favorite identity is the exact latitude/longitude pair. Adding a location
+whose coordinates are already saved replaces its address/details without
+creating a duplicate or changing its position. New favorites appear after
+existing favorites, oldest first; removing and adding again places the
+location at the end. Opening a favorite makes it the active location restored
+on the next launch.
 
 ---
 

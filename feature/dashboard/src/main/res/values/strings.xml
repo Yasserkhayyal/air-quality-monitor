@@ -2,6 +2,10 @@
     <string name="dashboard_title">Air quality</string>
     <string name="dashboard_search">Search</string>
     <string name="dashboard_favorites">Favorites</string>
+    <string name="dashboard_add_location_to_favorites">Add selected location to favorites</string>
+    <string name="dashboard_location_is_favorite">Location is saved to favorites</string>
+    <string name="dashboard_favorite_add_failed">Couldn’t save this location to favorites. Try again.</string>
+    <string name="dashboard_favorites_unavailable">Favorites are unavailable right now.</string>
     <string name="dashboard_current_location">Current location</string>
     <string name="dashboard_location_selected">Location selected</string>
     <string name="dashboard_location_permission_denied">Location permission denied</string>

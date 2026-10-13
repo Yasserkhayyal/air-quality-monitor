@@ -241,9 +241,15 @@ requesting location permission.
 
 Responsible for:
 
-- saving favorite locations
-- retrieving favorite locations
-- removing favorite locations
+- observing favorite locations in persisted insertion order
+- adding or updating a favorite by its latitude/longitude pair
+- removing a favorite by its latitude/longitude pair
+
+Coordinate conflicts update saved location details while retaining the
+favorite's original insertion order. New favorites append after existing
+favorites. Selecting a favorite is coordinated by Presentation through
+`SelectedLocationRepository`, then app-level navigation opens the Dashboard;
+feature modules do not depend on one another.
 
 ---
 

@@ -145,6 +145,31 @@ class DashboardScreenTest {
         composeRule.onNodeWithText("42").assertIsDisplayed()
     }
 
+    /** The Dashboard favorite action emits an intent for its active location. */
+    @Test
+    fun tappingAddFavoriteEmitsIntent() {
+        val intents = mutableListOf<DashboardIntent>()
+        composeRule.setContent {
+            AirQualityMonitorTheme {
+                DashboardScreen(
+                    onOpenSearch = {},
+                    onOpenFavorites = {},
+                    onOpenHistory = {},
+                    uiState = DashboardUiState(
+                        activeLocation = sampleSnapshot().location,
+                    ),
+                    onIntent = intents::add,
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(ADD_FAVORITE_TOP_BAR_ICON_BUTTON)
+            .assertIsDisplayed()
+            .performClick()
+
+        assertEquals(listOf(DashboardIntent.AddActiveLocationToFavorites), intents)
+    }
+
     /** Each typed fetch error selects user-facing service guidance instead of a fallback message. */
     @Test
     fun showsSpecificMessageForEachRemainingDashboardFailureType() {
