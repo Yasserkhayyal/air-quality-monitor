@@ -9,7 +9,10 @@ import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.A
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.database.AirQualityDatabase
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.database.MIGRATION_1_2
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.database.MIGRATION_2_3
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.database.MIGRATION_3_4
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.favorites.toDomain
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.selectedLocation.SelectedLocationEntity
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -110,7 +113,7 @@ class AirQualityDaoTest {
             context,
             AirQualityDatabase::class.java,
             databaseName,
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
         try {
             val cachedMeasurement = migratedDatabase.airQualityDao().findByLocationKey("30.044:31.236")
             assertEquals(42, cachedMeasurement?.europeanAqi)
@@ -188,7 +191,7 @@ class AirQualityDaoTest {
             context,
             AirQualityDatabase::class.java,
             databaseName,
-        ).addMigrations(MIGRATION_2_3).build()
+        ).addMigrations(MIGRATION_2_3, MIGRATION_3_4).build()
         try {
             val cachedMeasurement = migratedDatabase.airQualityDao().findByLocationKey("30.044:31.236")
             assertEquals(42, cachedMeasurement?.europeanAqi)
@@ -203,8 +206,113 @@ class AirQualityDaoTest {
         }
     }
 
+    /** Upgrades v3 and preserves measurement cache, selected location, and favorites. */
+    @Test
+    fun migrationFromVersionThreePreservesExistingData() = runTest {
+        val databaseName = "air-quality-v3-migration-test.db"
+        context.deleteDatabase(databaseName)
+        context.openOrCreateDatabase(databaseName, Context.MODE_PRIVATE, null).use { legacyDatabase ->
+            legacyDatabase.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `air_quality_cache` (
+                    `locationKey` TEXT NOT NULL,
+                    `latitude` REAL NOT NULL,
+                    `longitude` REAL NOT NULL,
+                    `address` TEXT,
+                    `timestamp` TEXT NOT NULL,
+                    `europeanAqi` INTEGER,
+                    `pm2_5` REAL,
+                    `pm10` REAL,
+                    `carbonMonoxide` REAL,
+                    `nitrogenDioxide` REAL,
+                    `ozone` REAL,
+                    `retrievedAtEpochMillis` INTEGER NOT NULL,
+                    PRIMARY KEY(`locationKey`)
+                )
+                """.trimIndent(),
+            )
+            legacyDatabase.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `selected_location` (
+                    `id` INTEGER NOT NULL,
+                    `latitude` REAL NOT NULL,
+                    `longitude` REAL NOT NULL,
+                    `address` TEXT,
+                    PRIMARY KEY(`id`)
+                )
+                """.trimIndent(),
+            )
+            legacyDatabase.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `favorite_locations` (
+                    `latitude` REAL NOT NULL,
+                    `longitude` REAL NOT NULL,
+                    `address` TEXT,
+                    `sortOrder` INTEGER NOT NULL,
+                    PRIMARY KEY(`latitude`, `longitude`)
+                )
+                """.trimIndent(),
+            )
+            legacyDatabase.execSQL(
+                "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+            )
+            legacyDatabase.execSQL(
+                "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '$VERSION_THREE_IDENTITY_HASH')",
+            )
+            legacyDatabase.execSQL("PRAGMA user_version = 3")
+            legacyDatabase.execSQL(
+                """
+                INSERT INTO air_quality_cache (
+                    locationKey, latitude, longitude, address, timestamp, europeanAqi,
+                    pm2_5, pm10, carbonMonoxide, nitrogenDioxide, ozone, retrievedAtEpochMillis
+                ) VALUES (
+                    '30.044:31.236', 30.0444, 31.2357, 'Cairo, Egypt', '2026-09-25T16:00',
+                    42, 12.5, 20.0, 300.0, 18.0, 46.0, 1000
+                )
+                """.trimIndent(),
+            )
+            legacyDatabase.execSQL(
+                """
+                INSERT INTO selected_location (id, latitude, longitude, address)
+                VALUES (1, 30.0444, 31.2357, 'Cairo, Egypt')
+                """.trimIndent(),
+            )
+            legacyDatabase.execSQL(
+                """
+                INSERT INTO favorite_locations (latitude, longitude, address, sortOrder)
+                VALUES (30.0444, 31.2357, 'Cairo, Egypt', 0)
+                """.trimIndent(),
+            )
+        }
+
+        val migratedDatabase = Room.databaseBuilder(
+            context,
+            AirQualityDatabase::class.java,
+            databaseName,
+        ).addMigrations(MIGRATION_3_4).build()
+        try {
+            assertEquals(
+                42,
+                migratedDatabase.airQualityDao().findByLocationKey("30.044:31.236")?.europeanAqi,
+            )
+            assertEquals(
+                SelectedLocationEntity(latitude = 30.0444, longitude = 31.2357, address = "Cairo, Egypt"),
+                migratedDatabase.selectedLocationDao().getSelectedLocation(),
+            )
+            assertEquals(
+                listOf(Location(30.0444, 31.2357, "Cairo, Egypt")),
+                migratedDatabase.favoriteLocationDao().observeFavorites().first().map { it.toDomain() },
+            )
+            assertTrue(migratedDatabase.historicalAirQualityDao().getLatest("30.044:31.236").isEmpty())
+        } finally {
+            migratedDatabase.close()
+            context.deleteDatabase(databaseName)
+        }
+    }
+
     private companion object {
         const val VERSION_ONE_IDENTITY_HASH = "08fa64c14cb02d274249f36bc144bc02"
         const val VERSION_TWO_IDENTITY_HASH = "3a01314e19b5903b0f32672e2aa7de84"
+        const val VERSION_THREE_IDENTITY_HASH = "a92a6f70ee012db45817f5bf35717db5"
     }
 }

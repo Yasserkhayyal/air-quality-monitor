@@ -20,6 +20,19 @@ data class AirQualitySnapshot(
         get() = europeanAqi?.let(AqiCategory::from)
 }
 
+/**
+ * Air-quality measurements reported for one hourly observation in UTC.
+ */
+data class HistoricalAirQualityPoint(
+    val timestamp: String,
+    val europeanAqi: Int?,
+    val pm2_5: Double?,
+    val pm10: Double?,
+    val carbonMonoxide: Double?,
+    val nitrogenDioxide: Double?,
+    val ozone: Double?,
+)
+
 enum class AqiCategory {
     GOOD,
     FAIR,

@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.gson.JsonParseException
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.AirQualityDao
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.AirQualityRepositoryImpl
+import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.HistoricalAirQualityDao
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoApi
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoCurrent
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.data.airquality.OpenMeteoResponse
@@ -34,7 +35,7 @@ class AirQualityRepositoryImplTest {
         val dao = mockk<AirQualityDao>(relaxed = true)
         coEvery { api.getCurrentAirQuality(any(), any(), any(), any()) } returns sampleResponse()
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
+        val result = createRepository(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
 
         assertTrue(result.isSuccess)
         assertEquals(59, result.getOrNull()?.snapshot?.europeanAqi)
@@ -51,7 +52,7 @@ class AirQualityRepositoryImplTest {
         coEvery { api.getCurrentAirQuality(any(), any(), any(), any()) } throws IOException("offline")
         coEvery { dao.findByLocationKey(any()) } returns null
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
+        val result = createRepository(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
 
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is DataError.OfflineNoCache)
@@ -66,7 +67,7 @@ class AirQualityRepositoryImplTest {
             JsonParseException("malformed response")
         coEvery { dao.findByLocationKey(any()) } returns null
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
+        val result = createRepository(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
 
         assertTrue(result.exceptionOrNull() is DataError.UnexpectedResponse)
         coVerify(exactly = 1) { dao.findByLocationKey(any()) }
@@ -83,7 +84,7 @@ class AirQualityRepositoryImplTest {
             System.currentTimeMillis(),
         )
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(location)
+        val result = createRepository(api, dao).getCurrentAirQuality(location)
 
         assertEquals(snapshot, result.getOrNull()?.snapshot)
         assertEquals(DataFreshness.Fresh, result.getOrNull()?.freshness)
@@ -102,7 +103,7 @@ class AirQualityRepositoryImplTest {
             System.currentTimeMillis() - 30 * 60 * 1000L - 1,
         )
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(location)
+        val result = createRepository(api, dao).getCurrentAirQuality(location)
 
         assertTrue(result.isSuccess)
         assertEquals(DataFreshness.Stale, result.getOrNull()?.freshness)
@@ -119,7 +120,7 @@ class AirQualityRepositoryImplTest {
         coEvery { api.getCurrentAirQuality(any(), any(), any(), any()) } returns sampleResponse()
         coEvery { dao.upsert(any()) } throws SQLiteException("disk error")
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
+        val result = createRepository(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
 
         assertTrue(result.isSuccess)
         assertEquals(DataOrigin.Remote, result.getOrNull()?.origin)
@@ -133,7 +134,7 @@ class AirQualityRepositoryImplTest {
         coEvery { api.getCurrentAirQuality(any(), any(), any(), any()) } throws IOException("offline")
         coEvery { dao.findByLocationKey(any()) } throws SQLiteException("database locked")
 
-        val result = AirQualityRepositoryImpl(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
+        val result = createRepository(api, dao).getCurrentAirQuality(Location(1.0, 2.0))
 
         assertTrue(result.exceptionOrNull() is DataError.Local)
     }
@@ -149,6 +150,12 @@ class AirQualityRepositoryImplTest {
             ozone = 30.0,
         ),
     )
+
+    /** Creates the repository with an unused historical DAO for current-data tests. */
+    private fun createRepository(
+        api: OpenMeteoApi,
+        dao: AirQualityDao,
+    ) = AirQualityRepositoryImpl(api, dao, mockk<HistoricalAirQualityDao>(relaxed = true))
 
     private fun sampleSnapshot(location: Location) = AirQualitySnapshot(
         location = location,

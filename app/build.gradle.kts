@@ -48,6 +48,7 @@ dependencies {
 
     // Phase 0 module wiring
     implementation(project(":feature:dashboard"))
+    implementation(project(":feature:history"))
     implementation(project(":feature:search"))
     implementation(project(":feature:favorites"))
     implementation(project(":core:data"))

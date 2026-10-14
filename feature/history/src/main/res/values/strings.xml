@@ -1,0 +1,27 @@
+<resources>
+    <string name="history_title">Last 24 hours</string>
+    <string name="history_unavailable_title">Historical data unavailable</string>
+    <string name="history_unavailable_message">Hourly measurements will appear when the data source provides them.</string>
+    <string name="history_retry">Retry</string>
+    <string name="history_location_unavailable">Select a location before viewing historical air quality.</string>
+    <string name="history_location_selected">Location selected</string>
+    <string name="history_cached_refresh_failed">Couldn’t refresh hourly measurements. Showing saved data.</string>
+    <string name="history_partial_data">Some hourly measurements are unavailable.</string>
+    <string name="history_data_may_be_outdated">This data may be outdated.</string>
+    <string name="history_aqi">AQI</string>
+    <string name="history_unavailable_value">Unavailable</string>
+    <string name="history_aqi_good">Good</string>
+    <string name="history_aqi_fair">Fair</string>
+    <string name="history_aqi_moderate">Moderate</string>
+    <string name="history_aqi_poor">Poor</string>
+    <string name="history_aqi_very_poor">Very poor</string>
+    <string name="history_error_network">Couldn’t connect to the air-quality service. Check your connection and try again.</string>
+    <string name="history_error_server">The air-quality service is temporarily unavailable. Please try again later.</string>
+    <string name="history_error_request_rejected">The air-quality service couldn’t process this request. Please try again.</string>
+    <string name="history_error_rate_limited">The air-quality service is receiving too many requests. Try again later.</string>
+    <string name="history_error_configuration">The air-quality service is not configured correctly. Please try again later.</string>
+    <string name="history_error_unexpected">The air-quality service returned an unexpected response. Please try again later.</string>
+    <string name="history_error_offline">You are offline and no saved measurement is available.</string>
+    <string name="history_error_local">Couldn’t access saved air-quality data on this device. Try again.</string>
+    <string name="content_description_back">Go back</string>
+</resources>

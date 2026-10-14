@@ -7,6 +7,16 @@ data class AirQualityResult(
     val refreshError: DataError? = null,
 )
 
+/**
+ * Historical measurements and their cache/freshness context.
+ */
+data class HistoricalAirQualityResult(
+    val points: List<HistoricalAirQualityPoint>,
+    val freshness: DataFreshness,
+    val origin: DataOrigin,
+    val refreshError: DataError? = null,
+)
+
 enum class DataFreshness {
     Fresh,
     Stale,

@@ -33,10 +33,6 @@
     <string name="dashboard_view_history">View history</string>
     <string name="dashboard_use_current_location">Use current location</string>
     <string name="dashboard_measurement_not_available">Unavailable</string>
-    <string name="history_title">Last 24 hours</string>
-    <string name="history_unavailable_title">Historical data unavailable</string>
-    <string name="history_unavailable_message">Hourly measurements will appear when the data source provides them.</string>
-    <string name="history_retry">Retry</string>
     <string name="content_description_search">Search locations</string>
     <string name="content_description_favorites">Open favorites</string>
     <string name="content_description_back">Go back</string>

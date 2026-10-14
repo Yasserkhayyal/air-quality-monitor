@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,22 +44,21 @@ import com.eygraber.compose.placeholder.material3.placeholder
 import com.eygraber.compose.placeholder.shimmer
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AirQualitySnapshot
-import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.AqiCategory
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.DataError
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
+
+/**
+ * One labeled pollutant value rendered by the shared pollutant grid.
+ */
+internal data class PollutantReading(
+    val label: String,
+    val value: Double?,
+)
 
 const val SEARCH_TOP_BAR_ICON_BUTTON = "search_top_bar_icon_button"
 const val FAVORITES_TOP_BAR_ICON_BUTTON = "favorites_top_bar_icon_button"
 const val ADD_FAVORITE_TOP_BAR_ICON_BUTTON = "add_favorite_top_bar_icon_button"
 const val SEARCH_CHIP = "search_chip"
-private val AqiCategory.labelRes: Int
-    get() = when (this) {
-        AqiCategory.GOOD -> R.string.aqi_category_good
-        AqiCategory.FAIR -> R.string.aqi_category_fair
-        AqiCategory.MODERATE -> R.string.aqi_category_moderate
-        AqiCategory.POOR -> R.string.aqi_category_poor
-        AqiCategory.VERY_POOR -> R.string.aqi_category_very_poor
-    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -327,73 +325,29 @@ private fun DashboardContent(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    Text(
-                        stringResource(R.string.dashboard_aqi),
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                    Text(
-                        uiState.snapshot?.europeanAqi?.toString()
-                            ?: stringResource(R.string.dashboard_measurement_not_available),
-                        modifier = Modifier.placeholder(
-                            visible = uiState.isLoading,
-                            color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.primaryContainer),
-                            highlight = PlaceholderHighlight.shimmer(
-                                highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(
-                                    alpha = 0.35f,
-                                ),
-                            ),
-                        ),
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        uiState.snapshot?.category?.let { category ->
-                            stringResource(category.labelRes)
-                        } ?: stringResource(R.string.dashboard_data_unavailable),
-                        modifier = Modifier.placeholder(
-                            visible = uiState.isLoading,
-                            color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.primaryContainer),
-                            highlight = PlaceholderHighlight.shimmer(
-                                highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(
-                                    alpha = 0.35f,
-                                ),
-                            ),
-                        ),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Text(
-                        uiState.snapshot?.timestamp?.let(::formatTimestampForDisplay)
-                            ?: stringResource(R.string.dashboard_timestamp_unavailable),
-                        modifier = Modifier.placeholder(
-                            visible = uiState.isLoading,
-                            color = PlaceholderDefaults.color(backgroundColor = MaterialTheme.colorScheme.primaryContainer),
-                            highlight = PlaceholderHighlight.shimmer(
-                                highlightColor = MaterialTheme.colorScheme.primaryContainer.copy(
-                                    alpha = 0.35f,
-                                ),
-                            ),
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                    if (uiState.isStale) {
-                        Text(
-                            stringResource(R.string.dashboard_data_may_be_outdated),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    }
-                }
-            }
+            AqiSummaryCard(
+                europeanAqi = uiState.snapshot?.europeanAqi,
+                category = uiState.snapshot?.category,
+                timestamp = uiState.snapshot?.timestamp?.let(::formatTimestampForDisplay)
+                    ?: stringResource(R.string.dashboard_timestamp_unavailable),
+                isLoading = uiState.isLoading,
+                isStale = uiState.isStale,
+            )
 
             Text(
                 stringResource(R.string.dashboard_pollutants),
                 style = MaterialTheme.typography.titleMedium,
             )
-            PollutantGrid(uiState.isLoading, uiState.snapshot)
+            PollutantGrid(
+                isLoading = uiState.isLoading,
+                readings = listOf(
+                    PollutantReading("PM2.5", uiState.snapshot?.pm2_5),
+                    PollutantReading("PM10", uiState.snapshot?.pm10),
+                    PollutantReading("NO2", uiState.snapshot?.nitrogenDioxide),
+                    PollutantReading("O3", uiState.snapshot?.ozone),
+                    PollutantReading("CO", uiState.snapshot?.carbonMonoxide),
+                ),
+            )
         }
 
         Card(
@@ -464,22 +418,16 @@ private fun dashboardErrorMessage(error: DataError): String = when (error) {
     is DataError.Local -> stringResource(R.string.dashboard_error_local)
 }
 
+/** Renders labeled pollutant measurements in a two-column layout. */
 @Composable
-private fun PollutantGrid(isLoading: Boolean = false, snapshot: AirQualitySnapshot? = null) {
-    val pollutants = listOf(
-        "PM2.5" to snapshot?.pm2_5,
-        "PM10" to snapshot?.pm10,
-        "NO2" to snapshot?.nitrogenDioxide,
-        "O3" to snapshot?.ozone,
-        "CO" to snapshot?.carbonMonoxide,
-    )
+internal fun PollutantGrid(isLoading: Boolean, readings: List<PollutantReading>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        pollutants.chunked(2).forEach { row ->
+        readings.chunked(2).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                row.forEach { (pollutant, value) ->
+                row.forEach { reading ->
                     Card(
                         modifier = Modifier.weight(1f),
                         colors = CardDefaults.cardColors(
@@ -488,11 +436,11 @@ private fun PollutantGrid(isLoading: Boolean = false, snapshot: AirQualitySnapsh
                     ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(
-                                pollutant,
+                                reading.label,
                                 style = MaterialTheme.typography.labelLarge,
                             )
                             Text(
-                                value?.toString()
+                                reading.value?.toString()
                                     ?: stringResource(R.string.dashboard_measurement_not_available),
                                 modifier = Modifier.placeholder(
                                     visible = isLoading,

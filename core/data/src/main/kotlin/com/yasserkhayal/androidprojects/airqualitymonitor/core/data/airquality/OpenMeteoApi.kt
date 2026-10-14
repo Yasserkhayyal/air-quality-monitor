@@ -12,4 +12,18 @@ interface OpenMeteoApi {
             "european_aqi,pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,ozone",
         @Query("timezone") timezone: String = "auto",
     ): OpenMeteoResponse
+
+    /**
+     * Retrieves the last two days of hourly air-quality measurements.
+     */
+    @GET("v1/air-quality")
+    suspend fun getHistoricalAirQuality(
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double,
+        @Query("hourly") hourly: String =
+            "european_aqi,pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,ozone",
+        @Query("past_days") pastDays: Int = 2,
+        @Query("forecast_days") forecastDays: Int = 0,
+        @Query("timezone") timezone: String = "auto",
+    ): OpenMeteoHistoricalResponse
 }

@@ -99,6 +99,12 @@ user-facing features from shared domain contracts and data infrastructure.
     - Dashboard UI state and intents
     - Dashboard-specific Compose components
 
+- `:feature:history`
+    - Historical air-quality screen and presentation logic
+    - Historical air-quality ViewModel
+    - Historical UI state and intents
+    - History-specific compact measurement components
+
 - `:feature:search`
     - Search screen and presentation logic
     - Search ViewModel
@@ -133,7 +139,9 @@ user-facing features from shared domain contracts and data infrastructure.
 
 Feature modules depend on `:core:domain` and may depend on
 `:core:design-system` for shared presentation styling and components. They must
-not depend on `:core:data` or on other feature modules.
+not depend on `:core:data` or on other feature modules. History belongs in its
+own feature module because its compact hourly presentation does not reuse
+Dashboard-specific UI components.
 
 `:core:data` depends on `:core:domain` and provides the concrete
 implementations of domain repository interfaces.
@@ -280,6 +288,7 @@ HTTP-specific representations.
 Room is used for:
 
 - cached air-quality measurements
+- cached historical hourly measurements, keyed by location and observation time
 - the active location selected through search or current-location retrieval
 - favorite locations
 - local state required by the product
@@ -305,8 +314,14 @@ communicate when information may be stale.
 
 ### Freshness
 
-Cached air-quality data is considered fresh for up to 30 minutes after
+Current cached air-quality data is considered fresh for up to 30 minutes after
+retrieval. Cached historical hourly data is fresh for up to one hour after
 retrieval.
+
+Historical cache replacement should be performed atomically for the fetched
+location/time window: delete matching cached rows and insert the usable points
+from the successful response. Preserve rows for other locations and outside
+the replacement window. Do not overwrite cache with an unusable response.
 
 ### Online
 

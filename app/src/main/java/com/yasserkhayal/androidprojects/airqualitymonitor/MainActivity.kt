@@ -31,8 +31,8 @@ import androidx.core.content.ContextCompat
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.designsystem.theme.AirQualityMonitorTheme
 import com.yasserkhayal.androidprojects.airqualitymonitor.core.domain.Location
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.DashboardRoute
-import com.yasserkhayal.androidprojects.airqualitymonitor.feature.dashboard.HistoricalAirQualityScreen
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.favorites.FavoritesRoute
+import com.yasserkhayal.androidprojects.airqualitymonitor.feature.history.HistoricalAirQualityRoute
 import com.yasserkhayal.androidprojects.airqualitymonitor.feature.search.LocationSearchRoute
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -128,7 +128,7 @@ private fun AirQualityApp() {
                 onSearch = { destination = Destination.Search },
             )
 
-            Destination.History -> HistoricalAirQualityScreen(
+            Destination.History -> HistoricalAirQualityRoute(
                 onBack = { destination = Destination.Dashboard },
             )
         }

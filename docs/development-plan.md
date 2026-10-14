@@ -728,7 +728,8 @@ Test:
 
 # 9. Phase 6 — Historical Air Quality
 
-**Status:** Not Started
+**Status:** In Progress — implementation complete; instrumented tests await an
+available Android device.
 
 ## Goal
 
@@ -740,16 +741,16 @@ visualization such as a chart.
 
 ## Modules
 
-Primary implementation work occurs in:
+Historical presentation is isolated in `:feature:history` because its compact
+hourly measurement rows do not reuse Dashboard-specific UI components.
+Historical data and domain contracts remain in:
 
 - `:core:domain`
 - `:core:data`
 
-Add or use the appropriate existing feature presentation area as determined
-by the implemented navigation and screen structure.
-
-Do not create another Gradle feature module unless a concrete architectural
-reason appears.
+The application composition root owns navigation to the history feature.
+`:feature:history` depends on `:core:domain` and `:core:design-system`, not on
+`:feature:dashboard`.
 
 ## Tasks
 
@@ -762,21 +763,33 @@ reason appears.
 6. Define only the DTO fields required by the product.
 7. Implement DTO → Domain mapping.
 8. Add historical repository access.
-9. Determine whether historical caching provides enough value to justify
-   persistence in Version 1.
-10. Do not introduce historical persistence solely because Room already exists.
-11. Define the required Presentation state.
-12. Implement the simplest clear UI for the hourly data.
-13. Handle unavailable pollutant measurements gracefully.
-14. Handle unavailable historical data clearly.
-15. Keep API-specific response structures inside `:core:data`.
+9. Cache hourly observations by location and observation timestamp; keep
+   retrieval time for freshness decisions.
+10. Use one-hour freshness for historical cache and fall back to cached rows
+    on remote failure; show cache as stale when a successful response has no
+    usable measurements.
+11. On successful usable fetch, atomically replace cached rows for that
+    location and retrieved time window. Do not diff measurements individually.
+12. Upgrade Room from v3 to v4 while preserving existing cache, active
+    location, and favorites.
+13. Define the required Presentation state.
+14. Render history as compact hourly rows rather than repeating the prominent
+    Dashboard AQI card and pollutant tiles.
+15. Keep history UI, ViewModel, resources, and tests in `:feature:history`.
+16. Handle unavailable pollutant measurements and unavailable history
+    gracefully.
+17. Keep API-specific response structures inside `:core:data`.
 
 ## Definition of Done
 
 The application can retrieve and display supported hourly historical
-measurements for the previous 24 hours when available.
+measurements for the latest available previous 24-hour period.
 
 The UI remains independent of API-specific response structures.
+
+Historical cache uses the one-hour freshness threshold and remote-failure
+fallback. Successful usable fetch replaces only the same location/time window
+atomically; the migration preserves existing persisted data.
 
 ## Testing Tasks
 
@@ -784,6 +797,8 @@ Test:
 
 - historical DTO mapping
 - repository behavior
+- historical cache replacement and migration
+- one-hour historical freshness and cached fallback
 - unavailable metrics
 - unavailable historical data
 - ViewModel state

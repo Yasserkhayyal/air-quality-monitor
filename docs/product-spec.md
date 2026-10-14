@@ -152,19 +152,28 @@ The exact fields displayed depend on data availability.
 The application should gracefully handle metrics that are unavailable
 for a specific measurement.
 
+Historical measurements should be cached locally. A historical cache is fresh
+for up to one hour after retrieval. When refresh fails or the response has no
+usable hourly measurements, show cached history when available and identify it
+as potentially outdated when it exceeds the one-hour freshness threshold.
+When neither usable remote history nor cached history exists, show an
+understandable unavailable/error state.
+
 ---
 
 ### 4.7 Offline Support
 
-The application should cache recently retrieved air-quality data.
+The application should cache recently retrieved current and historical
+air-quality data.
 
-A cached measurement is considered fresh for up to 30 minutes after
-its retrieval time.
+Current measurements are fresh for up to 30 minutes after retrieval.
+Historical hourly measurements are fresh for up to one hour after retrieval.
 
 When network connectivity is unavailable:
 
 - Cached data should be displayed when available.
-- Data older than 30 minutes must be clearly marked as stale.
+- Current data older than 30 minutes and historical data older than one hour
+  must be clearly marked as stale.
 - The UI should clearly communicate when the displayed data may be outdated.
 - If no cached data exists, an understandable offline state must be shown.
 
