@@ -728,9 +728,7 @@ Test:
 
 # 9. Phase 6 — Historical Air Quality
 
-**Status:** In Progress — implementation complete; instrumented tests await an
-available Android device.
-
+**Status:** Completed
 ## Goal
 
 Display the last 24 hours of hourly air-quality measurements when the data
