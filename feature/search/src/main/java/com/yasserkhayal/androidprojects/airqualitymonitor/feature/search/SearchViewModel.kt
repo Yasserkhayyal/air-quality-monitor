@@ -136,7 +136,7 @@ internal class SearchViewModel @Inject constructor(
             val saveResult = selectedLocationRepository.saveSelectedLocation(location)
             saveResult.fold(
                 onSuccess = {
-                    _uiState.update { it.copy(isSelecting = false, error = null) }
+                    _uiState.update { it.copy(query = "", isSelecting = false, error = null) }
                     _effects.send(SearchEffect.OpenDashboard(location))
                 },
                 onFailure = { error ->

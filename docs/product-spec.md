@@ -105,6 +105,8 @@ distinguish between locations with similar names.
 After selecting a location, the application retrieves its air-quality
 data using the selected location's coordinates.
 
+Search input should be cleared before navigation to Dashboard Screen
+
 ---
 
 ### 4.5 Favorites

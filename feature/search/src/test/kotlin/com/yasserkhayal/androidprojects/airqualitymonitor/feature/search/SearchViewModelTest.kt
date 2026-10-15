@@ -103,7 +103,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `persists selected result before requesting dashboard navigation`() = runTest(dispatcher) {
+    fun `persists selected result and clear query before requesting dashboard navigation`() = runTest(dispatcher) {
         val location = Location(30.0, 31.0, "Cairo, Egypt")
         coEvery { searchRepository.search("Cairo") } returns Result.success(listOf(location))
         coEvery { selectedLocationRepository.saveSelectedLocation(location) } returns Result.success(Unit)
@@ -116,6 +116,7 @@ class SearchViewModelTest {
         viewModel.onIntent(SearchIntent.LocationSelected(location))
         advanceUntilIdle()
 
+        assertEquals("", viewModel.uiState.value.query)
         assertEquals(SearchEffect.OpenDashboard(location), effect.await())
         coVerify(exactly = 1) { selectedLocationRepository.saveSelectedLocation(location) }
     }

@@ -116,7 +116,7 @@ internal fun LocationSearchScreen(
                     uiState.isSearching || uiState.isSelecting -> Unit
 
                     uiState.error is SearchError.SearchFailed -> item {
-                        val dataError = (uiState.error as SearchError.SearchFailed).dataError
+                        val dataError = uiState.error.dataError
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
                                 searchErrorMessage(dataError),
@@ -134,7 +134,7 @@ internal fun LocationSearchScreen(
 
                     else -> {
                         if (uiState.error is SearchError.SelectionFailed) {
-                            val dataError = (uiState.error as SearchError.SelectionFailed).dataError
+                            val dataError = uiState.error.dataError
                             item {
                                 Text(
                                     searchErrorMessage(dataError),
