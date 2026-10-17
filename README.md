@@ -165,6 +165,7 @@ Work is organized into incremental phases so each phase can be built and tested 
 <table>
   <tr>
     <th>Dashboard</th>
+    <th>Dashboard Dark Theme</th>
     <th>Location search</th>
     <th>Favorites</th>
     <th>History</th>
