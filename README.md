@@ -162,17 +162,27 @@ Work is organized into incremental phases so each phase can be built and tested 
 
 ## Screenshots
 
-![Dashboard](docs/assets/screenshots/dashboard.png)
-![Dashboard dark theme](docs/assets/screenshots/dashboard-dark-theme.png)
-![Favorites](docs/assets/screenshots/favorites.png)
-![Search](docs/assets/screenshots/search.png)
-![History](docs/assets/screenshots/history.png)
+<table>
+  <tr>
+    <th>Dashboard</th>
+    <th>Location search</th>
+    <th>Favorites</th>
+    <th>History</th>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/screenshots/dashboard.png" width="160" alt="Current air quality dashboard" /></td>
+    <td><img src="docs/assets/screenshots/dashboard-dark-theme.png" width="160" alt="Current air quality dashboard in dark theme" /></td>
+    <td><img src="docs/assets/screenshots/search.png" width="160" alt="Location search screen" /></td>
+    <td><img src="docs/assets/screenshots/favorites.png" width="160" alt="Favorite locations screen" /></td>
+    <td><img src="docs/assets/screenshots/history.png" width="160" alt="Historical air quality screen" /></td>
+  </tr>
+</table>
 
 ## Demo
 
 <p style="text-align: center;">
   <a href="docs/assets/demo/demo.webm">
-    <img src="docs/assets/screenshots/demo-preview.png" alt="Open the Air Quality Monitor screen recording (WebM)" />
+    <img src="docs/assets/screenshots/demo-preview.png" width="160" alt="Open the Air Quality Monitor screen recording (WebM)" />
   </a>
 </p>
 
