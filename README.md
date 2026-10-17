@@ -162,21 +162,17 @@ Work is organized into incremental phases so each phase can be built and tested 
 
 ## Screenshots
 
-<p style="text-align: center;">
-  <img src="docs/assets/screenshots/dashboard.png" alt="Current air quality dashboard" />
-  &nbsp;
-  <img src="docs/assets/screenshots/search.png" alt="Location search screen" />
-  &nbsp;
-  <img src="docs/assets/screenshots/favorites.png" alt="Favorite locations screen" />
-  &nbsp;
-  <img src="docs/assets/screenshots/history-dark-theme.png" alt="Historical air quality screen" />
-</p>
+![Dashboard](docs/assets/screenshots/dashboard.png)
+![Dashboard dark theme](docs/assets/screenshots/dashboard-dark-theme.png)
+![Favorites](docs/assets/screenshots/favorites.png)
+![Search](docs/assets/screenshots/search.png)
+![History](docs/assets/screenshots/history.png)
 
 ## Demo
 
 <p style="text-align: center;">
   <a href="docs/assets/demo/demo.webm">
-    <img src="docs/assets/screenshots/demo-preview.png" width="360" alt="Open the Air Quality Monitor screen recording (WebM)" />
+    <img src="docs/assets/screenshots/demo-preview.png" alt="Open the Air Quality Monitor screen recording (WebM)" />
   </a>
 </p>
 
